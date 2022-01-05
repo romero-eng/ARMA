@@ -123,27 +123,6 @@ def realNegativeRootFreqz(Gamma, z_domain_root_within_unit_circle, omega):
     return [theo_mag, theo_phase_deg, AR_squared_freq_mag_coeffs, MA_squared_freq_mag_coeffs]
 
 
-def realPositiveRootZTransformCoefficents(Gamma, z_domain_root_within_unit_circle):
-
-    if(z_domain_root_within_unit_circle):
-        rho_abs_power = -1
-    else:
-        rho_abs_power = 1
-
-    rho_abs = (Gamma + np.sqrt(np.square(Gamma) - 1))**rho_abs_power
-
-    z_transform_coeff_array = [1, -rho_abs]
-
-    if(z_domain_root_within_unit_circle):
-        AR_z_transform_coeff_array = z_transform_coeff_array
-        MA_z_transform_coeff_array = [1]
-    else:
-        AR_z_transform_coeff_array = [1]
-        MA_z_transform_coeff_array = z_transform_coeff_array
-
-    return [AR_z_transform_coeff_array, MA_z_transform_coeff_array]
-
-
 def realPositiveRootFreqz(Gamma, z_domain_root_within_unit_circle, omega):
 
     if(z_domain_root_within_unit_circle):
@@ -176,4 +155,29 @@ def realPositiveRootFreqz(Gamma, z_domain_root_within_unit_circle, omega):
         MA_squared_freq_mag_coeffs = squared_freq_mag_coeffs
 
     return [theo_mag, theo_phase_deg, AR_squared_freq_mag_coeffs, MA_squared_freq_mag_coeffs]
+
+
+def realPositiveRootZTransformCoefficents(Gamma, z_domain_root_within_unit_circle):
+
+    if(z_domain_root_within_unit_circle):
+        rho_abs_power = -1
+    else:
+        rho_abs_power = 1
+
+    rho_abs = (Gamma + np.sqrt(np.square(Gamma) - 1))**rho_abs_power
+
+    z_transform_coeff_array = [1, -rho_abs]
+
+    if(z_domain_root_within_unit_circle):
+        AR_z_transform_coeff_array = z_transform_coeff_array
+        MA_z_transform_coeff_array = [1]
+    else:
+        AR_z_transform_coeff_array = [1]
+        MA_z_transform_coeff_array = z_transform_coeff_array
+
+    return [AR_z_transform_coeff_array, MA_z_transform_coeff_array]
+
+
+if(__name__=='__main__'):
+
 
