@@ -35,7 +35,7 @@ class zDomainComplexConjugateRootPair:
         abs_gamma_imag = np.imag(square_freq_mag_cos_poly_root)
 
         if(abs_gamma_imag <= 0):
-            error('The given complex root of a squared frequency magnitude cosine polynomial must have a positive imaginary component.')
+            error('The given complex root of a squared frequency magnitude cosine polynomial must have a negative imaginary component.')
 
         return [gamma_real, abs_gamma_imag]
 
