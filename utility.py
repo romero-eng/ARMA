@@ -104,24 +104,8 @@ class zDomainSingleRealRoot:
         return [abs_h_f, angle_deg_h_f]
 
 
-if(__name__=='__main__'):
+def testByPlotting(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo):
 
-    z_domain_root_within_unit_circle = False
-    #gamma_real = 0.5
-    #abs_gamma_imag = 0.05
-    gamma = 1.1
-    rho_sign = 1
-    
-    #[MA_z_coefs, AR_z_coefs] = zDomainComplexConjugateRootPair.z_trans_coefs(gamma_real, abs_gamma_imag, z_domain_root_within_unit_circle)
-    [MA_z_coefs, AR_z_coefs] = zDomainSingleRealRoot.z_trans_coefs(gamma, rho_sign, z_domain_root_within_unit_circle)
-
-    [omega, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs)
-    abs_h_f_emp = np.abs(h_f_emp)
-    angle_deg_h_f_emp = np.rad2deg(np.angle(h_f_emp))
-    
-    #[abs_h_f_theo, angle_deg_h_f_theo] = zDomainComplexConjugateRootPair.freqz(omega, gamma_real, abs_gamma_imag, z_domain_root_within_unit_circle)
-    [abs_h_f_theo, angle_deg_h_f_theo] = zDomainSingleRealRoot.freqz(omega, gamma, rho_sign, z_domain_root_within_unit_circle)
-    
     f = omega/(2*np.pi)
     
     plt.figure()
@@ -149,4 +133,25 @@ if(__name__=='__main__'):
     plt.title('Theoretical Phase')
 
     plt.show()
+
+
+if(__name__=='__main__'):
+
+    z_domain_root_within_unit_circle = False
+    #gamma_real = 0.5
+    #abs_gamma_imag = 0.05
+    gamma = 1.1
+    rho_sign = 1
+    
+    #[MA_z_coefs, AR_z_coefs] = zDomainComplexConjugateRootPair.z_trans_coefs(gamma_real, abs_gamma_imag, z_domain_root_within_unit_circle)
+    [MA_z_coefs, AR_z_coefs] = zDomainSingleRealRoot.z_trans_coefs(gamma, rho_sign, z_domain_root_within_unit_circle)
+
+    [omega, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs)
+    abs_h_f_emp = np.abs(h_f_emp)
+    angle_deg_h_f_emp = np.rad2deg(np.angle(h_f_emp))
+    
+    #[abs_h_f_theo, angle_deg_h_f_theo] = zDomainComplexConjugateRootPair.freqz(omega, gamma_real, abs_gamma_imag, z_domain_root_within_unit_circle)
+    [abs_h_f_theo, angle_deg_h_f_theo] = zDomainSingleRealRoot.freqz(omega, gamma, rho_sign, z_domain_root_within_unit_circle)
+    
+    testByPlotting(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo)
 
