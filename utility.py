@@ -8,14 +8,14 @@ class zDomainComplexConjugateRootPair:
     # lambda for converting boolean flag (decides whether z-domain roots are inside or outside unit circle) into corresponding exponent
     convert_boolean_to_abs_rho_power_func = lambda z_domain_root_within_unit_circle : 1 - 2*z_domain_root_within_unit_circle
 
-    # Basic math equations for mapping a complex conjugate root pair from the frequency magnitude cosine polynomial
-    # to the magnitudes of the corresponding complex conjugate root pair within the z-transform
+    # Basic math equations for mapping a complex conjugate root pair from the squared frequency magnitude cosine 
+    # polynomial to the magnitudes of the corresponding complex conjugate root pair within the z-transform
     eta_func     = lambda gamma_real, abs_gamma_imag : 0.5*(np.square(gamma_real) + np.square(abs_gamma_imag) + 1)
     gamma_func   = lambda eta, gamma_real : np.sqrt(eta + np.sqrt(np.square(eta) - np.square(gamma_real)))
     abs_rho_func = lambda gamma, abs_rho_power : (gamma + np.sqrt(np.square(gamma) - 1))**abs_rho_power
 
-    # Array of coefficients for a z-transform with only one specified pair of complex conjugate roots in the frequency magnitude
-    # cosine polynomial
+    # Array of coefficients for a z-transform with only one specified pair of complex conjugate roots in the squared frequency
+    # magnitude cosine polynomial
     z_transform_coeffs_func = lambda gamma_real, gamma, abs_rho : np.array([1, 2*abs_rho*(gamma_real/gamma), np.square(abs_rho)])
 
     # Frequency magnitude response for the corresponding discrete fourier transform of a z-transform with only one specified pair of complex conjugate roots
