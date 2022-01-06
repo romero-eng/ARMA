@@ -22,7 +22,7 @@ class zDomainComplexConjugateRootPair:
     magnitude_response_func = lambda omega, gamma_real, abs_gamma_imag, abs_rho : 2*abs_rho*np.sqrt(np.square(np.cos(omega) + gamma_real) + np.square(abs_gamma_imag))
 
     # Frequency phase response (in degrees) for the corresponding discrete fourier transform of a z-transform with only one specified pair of complex conjugate roots
-    arctan_num_func            = lambda omega, gamma, gamma_real, abs_rho : 2*np.sin(omega)*((gamma_real/gamma) + np.cos(omega))
+    arctan_num_func            = lambda omega, gamma, gamma_real, abs_rho : 2*np.sin(omega)*((gamma_real/(abs_rho*gamma)) + np.cos(omega))
     arctan_den_func            = lambda omega, gamma, gamma_real, abs_rho : 2*np.square(np.cos(omega) + (gamma_real/(2*abs_rho*gamma))) - 2*np.square(gamma_real/(2*abs_rho*gamma)) + np.square(1/abs_rho) - 1
     phase_degree_response_func = lambda arctan_num, arctan_den : -np.rad2deg(np.arctan2(arctan_num, arctan_den))
 
@@ -66,8 +66,8 @@ class zDomainComplexConjugateRootPair:
         gamma = cls.gamma_func(cls.eta_func(gamma_real, abs_gamma_imag), gamma_real)
         abs_rho = cls.abs_rho_func(gamma, abs_rho_power)
 
-        arctan_num = cls.arctan_num_func(omega, gamma_real, abs_gamma_imag, abs_rho)
-        arctan_den = cls.arctan_den_func(omega, gamma_real, abs_gamma_imag, abs_rho)
+        arctan_num = cls.arctan_num_func(omega, gamma, gamma_real, abs_rho)
+        arctan_den = cls.arctan_den_func(omega, gamma, gamma_real, abs_rho)
 
         abs_h_f = cls.magnitude_response_func(omega, gamma_real, abs_gamma_imag, abs_rho)**abs_rho_power
         angle_deg_h_f = abs_rho_power*cls.phase_degree_response_func(arctan_num, arctan_den)
@@ -177,7 +177,7 @@ if(__name__=='__main__'):
 
     z_domain_root_within_unit_circle = True
 
-    square_freq_mag_cos_poly_root = -(0.5 + 0.05j)
+    square_freq_mag_cos_poly_root = -(-0.5 + 0.05j)
     #square_freq_mag_cos_poly_root = -(-1.1)
     
     if(isinstance(square_freq_mag_cos_poly_root, complex)):
