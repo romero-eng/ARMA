@@ -37,20 +37,6 @@ class zDomainComplexConjugateRootPair:
                 phase_degree_response_func]
 
     @staticmethod
-    def MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle):
-
-        MA_flag = MA_or_AR == 'MA'
-        AR_flag = MA_or_AR == 'AR'
-
-        if((not MA_flag) and (not AR_flag)):
-            raise ValueError("The 'MA_or_AR' variable must either be 'MA' or 'AR'")
-        
-        if(AR_flag and (not z_domain_root_within_unit_circle)):
-            raise ValueError("Cannot have autoregressive (IIR) coefficients while the roots of the corresponding z-transform are outside the unit circle")
-
-        return [MA_flag, AR_flag]
-
-    @staticmethod
     def interpret_squared_frequency_magnitude_cosine_polynomial_root(square_freq_mag_cos_poly_root):
 
         square_freq_mag_cos_poly_root = -1*square_freq_mag_cos_poly_root
@@ -71,7 +57,7 @@ class zDomainComplexConjugateRootPair:
          z_transform_coeffs_func, _, _, _, _] = \
             zDomainComplexConjugateRootPair.get_math_functions()
 
-        [MA_flag, AR_flag] = zDomainComplexConjugateRootPair.MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle)
+        [MA_flag, AR_flag] = zDomainRoot.MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle)
 
         [gamma_real, abs_gamma_imag] = zDomainComplexConjugateRootPair.interpret_squared_frequency_magnitude_cosine_polynomial_root(square_freq_mag_cos_poly_root)
 
@@ -98,7 +84,7 @@ class zDomainComplexConjugateRootPair:
          phase_degree_response_func] = \
             zDomainComplexConjugateRootPair.get_math_functions()
 
-        [_, AR_flag] = zDomainComplexConjugateRootPair.MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle)
+        [_, AR_flag] = zDomainRoot.MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle)
 
         [gamma_real, abs_gamma_imag] = zDomainComplexConjugateRootPair.interpret_squared_frequency_magnitude_cosine_polynomial_root(square_freq_mag_cos_poly_root)
 
@@ -149,20 +135,6 @@ class zDomainSingleRealRoot:
                 phase_degree_response_func]
 
     @staticmethod
-    def MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle):
-
-        MA_flag = MA_or_AR == 'MA'
-        AR_flag = MA_or_AR == 'AR'
-
-        if((not MA_flag) and (not AR_flag)):
-            raise ValueError("The 'MA_or_AR' variable must either be 'MA' or 'AR'")
-        
-        if(AR_flag and (not z_domain_root_within_unit_circle)):
-            raise ValueError("Cannot have autoregressive (IIR) coefficients while the roots of the corresponding z-transform are outside the unit circle")
-
-        return [MA_flag, AR_flag]
-
-    @staticmethod
     def interpret_squared_frequency_magnitude_cosine_polynomial_root(square_freq_mag_cos_poly_root):
 
         rho_sign = -1*np.sign(square_freq_mag_cos_poly_root)
@@ -182,7 +154,7 @@ class zDomainSingleRealRoot:
          _, _] = \
             zDomainSingleRealRoot.get_math_functions()
 
-        [MA_flag, AR_flag] = zDomainSingleRealRoot.MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle)
+        [MA_flag, AR_flag] = zDomainRoot.MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle)
 
         [gamma, rho_sign] = zDomainSingleRealRoot.interpret_squared_frequency_magnitude_cosine_polynomial_root(square_freq_mag_cos_poly_root)
         
@@ -201,13 +173,12 @@ class zDomainSingleRealRoot:
     def freqz(omega, square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR):
 
         [convert_boolean_to_abs_rho_power_func,
-         abs_rho_func,
-         z_transform_coeffs_func,
+         abs_rho_func, _,
          magnitude_response_func,
          phase_degree_response_func] = \
             zDomainSingleRealRoot.get_math_functions()
 
-        [_, AR_flag] = zDomainSingleRealRoot.MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle)
+        [_, AR_flag] = zDomainRoot.MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle)
 
         [gamma, rho_sign] = zDomainSingleRealRoot.interpret_squared_frequency_magnitude_cosine_polynomial_root(square_freq_mag_cos_poly_root)
 
@@ -223,24 +194,41 @@ class zDomainSingleRealRoot:
         return [abs_h_f, angle_deg_h_f]
 
 
-def z_trans_coefs(square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR):
+class zDomainRoot():
 
-    if(isinstance(square_freq_mag_cos_poly_root, complex)):
-        [MA_z_coefs, AR_z_coefs] = zDomainComplexConjugateRootPair.z_trans_coefs(square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR)
-    else:
-        [MA_z_coefs, AR_z_coefs] =           zDomainSingleRealRoot.z_trans_coefs(square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR)
+    @staticmethod
+    def MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle):
+
+        MA_flag = MA_or_AR == 'MA'
+        AR_flag = MA_or_AR == 'AR'
+
+        if((not MA_flag) and (not AR_flag)):
+            raise ValueError("The 'MA_or_AR' variable must either be 'MA' or 'AR'")
+        
+        if(AR_flag and (not z_domain_root_within_unit_circle)):
+            raise ValueError("Cannot have autoregressive (IIR) coefficients while the roots of the corresponding z-transform are outside the unit circle")
+
+        return [MA_flag, AR_flag]
     
-    return [MA_z_coefs, AR_z_coefs]
+    @staticmethod
+    def z_trans_coefs(square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR):
 
-
-def freqz(omega, square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR):
-
-    if(isinstance(square_freq_mag_cos_poly_root, complex)):
-        [abs_h_f_theo, angle_deg_h_f_theo] = zDomainComplexConjugateRootPair.freqz(omega, square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR)
-    else:
-        [abs_h_f_theo, angle_deg_h_f_theo] =           zDomainSingleRealRoot.freqz(omega, square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR)
+        if(isinstance(square_freq_mag_cos_poly_root, complex)):
+            [MA_z_coefs, AR_z_coefs] = zDomainComplexConjugateRootPair.z_trans_coefs(square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR)
+        else:
+            [MA_z_coefs, AR_z_coefs] =           zDomainSingleRealRoot.z_trans_coefs(square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR)
     
-    return [abs_h_f_theo, angle_deg_h_f_theo]
+        return [MA_z_coefs, AR_z_coefs]
+
+    @staticmethod
+    def freqz(omega, square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR):
+
+        if(isinstance(square_freq_mag_cos_poly_root, complex)):
+            [abs_h_f_theo, angle_deg_h_f_theo] = zDomainComplexConjugateRootPair.freqz(omega, square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR)
+        else:
+            [abs_h_f_theo, angle_deg_h_f_theo] =           zDomainSingleRealRoot.freqz(omega, square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR)
+    
+        return [abs_h_f_theo, angle_deg_h_f_theo]
 
 
 def testByPlotting(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo):
@@ -291,13 +279,13 @@ if(__name__=='__main__'):
     #z_domain_root_within_unit_circle =  True; MA_or_AR = 'AR'; square_freq_mag_cos_poly_root = -(-0.5 + 0.05j)
     #z_domain_root_within_unit_circle = False; MA_or_AR = 'AR'; square_freq_mag_cos_poly_root = -(-0.5 + 0.05j) # should generate a ValueError
 
-    [MA_z_coefs, AR_z_coefs] = z_trans_coefs(square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR)
+    [MA_z_coefs, AR_z_coefs] = zDomainRoot.z_trans_coefs(square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR)
 
     [omega, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs)
     abs_h_f_emp = np.abs(h_f_emp)
     angle_deg_h_f_emp = np.rad2deg(np.angle(h_f_emp))
     
-    [abs_h_f_theo, angle_deg_h_f_theo] = freqz(omega, square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR)
+    [abs_h_f_theo, angle_deg_h_f_theo] = zDomainRoot.freqz(omega, square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR)
     
     testByPlotting(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo)
 
