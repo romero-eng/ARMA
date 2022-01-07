@@ -5,29 +5,8 @@ import matplotlib.pyplot as plt
 
 class zDomainComplexConjugateRootPair:
 
-    ## lambda for converting boolean flag (decides whether z-domain roots are inside or outside unit circle) into corresponding exponent
-    #convert_boolean_to_abs_rho_power_func = lambda z_domain_root_within_unit_circle : 1 - 2*z_domain_root_within_unit_circle
-    #
-    ## Basic math equations for mapping a complex conjugate root pair from the squared frequency magnitude cosine 
-    ## polynomial to the magnitudes of the corresponding complex conjugate root pair within the z-transform
-    #eta_func     = lambda gamma_real, abs_gamma_imag : 0.5*(np.square(gamma_real) + np.square(abs_gamma_imag) + 1)
-    #gamma_func   = lambda eta, gamma_real : np.sqrt(eta + np.sqrt(np.square(eta) - np.square(gamma_real)))
-    #abs_rho_func = lambda gamma, abs_rho_power : (gamma + np.sqrt(np.square(gamma) - 1))**abs_rho_power
-    #
-    ## Array of coefficients for a z-transform with only one specified pair of complex conjugate roots in the squared frequency
-    ## magnitude cosine polynomial
-    #z_transform_coeffs_func = lambda gamma_real, gamma, abs_rho : np.array([1, 2*abs_rho*(gamma_real/gamma), np.square(abs_rho)])
-    #
-    ## Frequency magnitude response for the corresponding discrete fourier transform of a z-transform with only one specified pair of complex conjugate roots
-    #magnitude_response_func = lambda omega, gamma_real, abs_gamma_imag, abs_rho : 2*abs_rho*np.sqrt(np.square(np.cos(omega) + gamma_real) + np.square(abs_gamma_imag))
-    #
-    ## Frequency phase response (in degrees) for the corresponding discrete fourier transform of a z-transform with only one specified pair of complex conjugate roots
-    #arctan_num_func            = lambda omega, gamma, gamma_real, abs_rho : 2*np.sin(omega)*((gamma_real/(abs_rho*gamma)) + np.cos(omega))
-    #arctan_den_func            = lambda omega, gamma, gamma_real, abs_rho : 2*np.square(np.cos(omega) + (gamma_real/(2*abs_rho*gamma))) - 2*np.square(gamma_real/(2*abs_rho*gamma)) + np.square(1/abs_rho) - 1
-    #phase_degree_response_func = lambda arctan_num, arctan_den : -np.rad2deg(np.arctan2(arctan_num, arctan_den))
-
-    @classmethod
-    def get_math_functions(cls):
+    @staticmethod
+    def get_math_functions():
 
         # lambda for converting boolean flag (decides whether z-domain roots are inside or outside unit circle) into corresponding exponent
         convert_boolean_to_abs_rho_power_func = lambda z_domain_root_within_unit_circle : 1 - 2*z_domain_root_within_unit_circle
@@ -57,8 +36,8 @@ class zDomainComplexConjugateRootPair:
                 arctan_num_func, arctan_den_func, 
                 phase_degree_response_func]
 
-    @classmethod
-    def MA_or_AR_interpretation(cls, MA_or_AR, z_domain_root_within_unit_circle):
+    @staticmethod
+    def MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle):
 
         MA_flag = MA_or_AR == 'MA'
         AR_flag = MA_or_AR == 'AR'
@@ -71,8 +50,8 @@ class zDomainComplexConjugateRootPair:
 
         return [MA_flag, AR_flag]
 
-    @classmethod
-    def interpret_squared_frequency_magnitude_cosine_polynomial_root(cls, square_freq_mag_cos_poly_root):
+    @staticmethod
+    def interpret_squared_frequency_magnitude_cosine_polynomial_root(square_freq_mag_cos_poly_root):
 
         square_freq_mag_cos_poly_root = -1*square_freq_mag_cos_poly_root
 
@@ -84,17 +63,17 @@ class zDomainComplexConjugateRootPair:
 
         return [gamma_real, abs_gamma_imag]
 
-    @classmethod
-    def z_trans_coefs(cls, square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR):
+    @staticmethod
+    def z_trans_coefs(square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR):
 
         [convert_boolean_to_abs_rho_power_func,
          eta_func, gamma_func, abs_rho_func, 
          z_transform_coeffs_func, _, _, _, _] = \
-            cls.get_math_functions()
+            zDomainComplexConjugateRootPair.get_math_functions()
 
-        [MA_flag, AR_flag] = cls.MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle)
+        [MA_flag, AR_flag] = zDomainComplexConjugateRootPair.MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle)
 
-        [gamma_real, abs_gamma_imag] = cls.interpret_squared_frequency_magnitude_cosine_polynomial_root(square_freq_mag_cos_poly_root)
+        [gamma_real, abs_gamma_imag] = zDomainComplexConjugateRootPair.interpret_squared_frequency_magnitude_cosine_polynomial_root(square_freq_mag_cos_poly_root)
 
         abs_rho_power = convert_boolean_to_abs_rho_power_func(z_domain_root_within_unit_circle)
         gamma = gamma_func(eta_func(gamma_real, abs_gamma_imag), gamma_real)
@@ -109,19 +88,19 @@ class zDomainComplexConjugateRootPair:
 
         return [MA_z_coefs, AR_z_coefs]
 
-    @classmethod
-    def freqz(cls, omega, square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR):
+    @staticmethod
+    def freqz(omega, square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR):
 
         [convert_boolean_to_abs_rho_power_func,
          eta_func, gamma_func, abs_rho_func, 
          _, magnitude_response_func, 
          arctan_num_func, arctan_den_func, 
          phase_degree_response_func] = \
-            cls.get_math_functions()
+            zDomainComplexConjugateRootPair.get_math_functions()
 
-        [_, AR_flag] = cls.MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle)
+        [_, AR_flag] = zDomainComplexConjugateRootPair.MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle)
 
-        [gamma_real, abs_gamma_imag] = cls.interpret_squared_frequency_magnitude_cosine_polynomial_root(square_freq_mag_cos_poly_root)
+        [gamma_real, abs_gamma_imag] = zDomainComplexConjugateRootPair.interpret_squared_frequency_magnitude_cosine_polynomial_root(square_freq_mag_cos_poly_root)
 
         abs_rho_power = convert_boolean_to_abs_rho_power_func(z_domain_root_within_unit_circle)
         gamma = gamma_func(eta_func(gamma_real, abs_gamma_imag), gamma_real)
@@ -142,8 +121,8 @@ class zDomainComplexConjugateRootPair:
 
 class zDomainSingleRealRoot:
 
-    @classmethod
-    def get_math_functions(cls):
+    @staticmethod
+    def get_math_functions():
 
         # lambda for converting boolean flag (decides whether z-domain roots are inside or outside unit circle) into corresponding exponent
         convert_boolean_to_abs_rho_power_func = lambda z_domain_root_within_unit_circle : 1 - 2*z_domain_root_within_unit_circle
@@ -169,8 +148,8 @@ class zDomainSingleRealRoot:
                 magnitude_response_func,
                 phase_degree_response_func]
 
-    @classmethod
-    def MA_or_AR_interpretation(cls, MA_or_AR, z_domain_root_within_unit_circle):
+    @staticmethod
+    def MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle):
 
         MA_flag = MA_or_AR == 'MA'
         AR_flag = MA_or_AR == 'AR'
@@ -183,8 +162,8 @@ class zDomainSingleRealRoot:
 
         return [MA_flag, AR_flag]
 
-    @classmethod
-    def interpret_squared_frequency_magnitude_cosine_polynomial_root(cls, square_freq_mag_cos_poly_root):
+    @staticmethod
+    def interpret_squared_frequency_magnitude_cosine_polynomial_root(square_freq_mag_cos_poly_root):
 
         rho_sign = -1*np.sign(square_freq_mag_cos_poly_root)
         gamma = np.abs(square_freq_mag_cos_poly_root)
@@ -194,18 +173,18 @@ class zDomainSingleRealRoot:
 
         return [gamma, rho_sign]
 
-    @classmethod
-    def z_trans_coefs(cls, square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR):
+    @staticmethod
+    def z_trans_coefs(square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR):
 
         [convert_boolean_to_abs_rho_power_func,
          abs_rho_func,
          z_transform_coeffs_func,
          _, _] = \
-            cls.get_math_functions()
+            zDomainSingleRealRoot.get_math_functions()
 
-        [MA_flag, AR_flag] = cls.MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle)
+        [MA_flag, AR_flag] = zDomainSingleRealRoot.MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle)
 
-        [gamma, rho_sign] = cls.interpret_squared_frequency_magnitude_cosine_polynomial_root(square_freq_mag_cos_poly_root)
+        [gamma, rho_sign] = zDomainSingleRealRoot.interpret_squared_frequency_magnitude_cosine_polynomial_root(square_freq_mag_cos_poly_root)
         
         z_coefs = z_transform_coeffs_func(abs_rho_func(gamma, convert_boolean_to_abs_rho_power_func(z_domain_root_within_unit_circle)), rho_sign)
 
@@ -218,19 +197,19 @@ class zDomainSingleRealRoot:
 
         return [MA_z_coefs, AR_z_coefs]
     
-    @classmethod
-    def freqz(cls, omega, square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR):
+    @staticmethod
+    def freqz(omega, square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR):
 
         [convert_boolean_to_abs_rho_power_func,
          abs_rho_func,
          z_transform_coeffs_func,
          magnitude_response_func,
          phase_degree_response_func] = \
-            cls.get_math_functions()
+            zDomainSingleRealRoot.get_math_functions()
 
-        [_, AR_flag] = cls.MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle)
+        [_, AR_flag] = zDomainSingleRealRoot.MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle)
 
-        [gamma, rho_sign] = cls.interpret_squared_frequency_magnitude_cosine_polynomial_root(square_freq_mag_cos_poly_root)
+        [gamma, rho_sign] = zDomainSingleRealRoot.interpret_squared_frequency_magnitude_cosine_polynomial_root(square_freq_mag_cos_poly_root)
 
         abs_rho = abs_rho_func(gamma, convert_boolean_to_abs_rho_power_func(z_domain_root_within_unit_circle))
 
