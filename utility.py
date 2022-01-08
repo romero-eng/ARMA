@@ -231,18 +231,18 @@ class zDomainRoot():
         return [abs_h_f_theo, angle_deg_h_f_theo]
 
 
-def testMultipleRoots(roots):
+def testMultipleRoots(roots_tuple):
 
-    num_roots = len(roots)
+    num_roots = len(roots_tuple)
 
     MA_z_coefs = np.array([1])
     AR_z_coefs = np.array([1])
     for root_idx in np.arange(0, num_roots):
         [tmp_MA_z_coefs,
          tmp_AR_z_coefs] = \
-             zDomainRoot.z_trans_coefs(roots[root_idx][2], 
-                                       roots[root_idx][0], 
-                                       roots[root_idx][1])
+             zDomainRoot.z_trans_coefs(roots_tuple[root_idx][2], 
+                                       roots_tuple[root_idx][0], 
+                                       roots_tuple[root_idx][1])
         MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
         AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
 
@@ -256,9 +256,9 @@ def testMultipleRoots(roots):
         [tmp_abs_h_f_theo,
          tmp_angle_deg_h_f_theo] = \
              zDomainRoot.freqz(omega,
-                               roots[root_idx][2], 
-                               roots[root_idx][0], 
-                               roots[root_idx][1])
+                               roots_tuple[root_idx][2], 
+                               roots_tuple[root_idx][0], 
+                               roots_tuple[root_idx][1])
         abs_h_f_theo = tmp_abs_h_f_theo*abs_h_f_theo
         angle_deg_h_f_theo = angle_deg_h_f_theo + tmp_angle_deg_h_f_theo
     angle_deg_h_f_theo = np.rad2deg(np.arctan2(np.sin(np.deg2rad(angle_deg_h_f_theo)), np.cos(np.deg2rad(angle_deg_h_f_theo)))) # this is done to wrap the phase response
@@ -300,10 +300,10 @@ def testMultipleRoots(roots):
 
 if(__name__=='__main__'):
 
-    roots = \
+    roots_tuple = \
         [(False, 'MA',    1.1), 
          ( True, 'MA',   -1.4), 
          ( True, 'AR', -( 0.45 + 0.86j)), 
          ( True, 'AR', -(-5.45 + 4.76j))]
 
-    testMultipleRoots(roots)
+    testMultipleRoots(roots_tuple)
