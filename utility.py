@@ -45,7 +45,7 @@ class zDomainComplexConjugateRootPair:
         abs_gamma_imag = np.imag(square_freq_mag_cos_poly_root)
 
         if(abs_gamma_imag <= 0):
-            error('The given complex root of a squared frequency magnitude cosine polynomial must have a negative imaginary component.')
+            raise ValueError('The given complex root of a squared frequency magnitude cosine polynomial must have a negative imaginary component.')
 
         return [gamma_real, abs_gamma_imag]
 
@@ -231,7 +231,37 @@ class zDomainRoot():
         return [abs_h_f_theo, angle_deg_h_f_theo]
 
 
-def testByPlotting(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo):
+def testMultipleRoots(roots):
+
+    num_roots = len(roots)
+
+    MA_z_coefs = np.array([1])
+    AR_z_coefs = np.array([1])
+    for root_idx in np.arange(0, num_roots):
+        [tmp_MA_z_coefs,
+         tmp_AR_z_coefs] = \
+             zDomainRoot.z_trans_coefs(roots[root_idx][2], 
+                                       roots[root_idx][0], 
+                                       roots[root_idx][1])
+        MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
+        AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
+
+    [omega, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs)
+    abs_h_f_emp = np.abs(h_f_emp)
+    angle_deg_h_f_emp = np.rad2deg(np.angle(h_f_emp))
+
+    abs_h_f_theo = np.ones(abs_h_f_emp.shape)
+    angle_deg_h_f_theo = np.zeros(angle_deg_h_f_emp.shape)
+    for root_idx in np.arange(0, num_roots):
+        [tmp_abs_h_f_theo,
+         tmp_angle_deg_h_f_theo] = \
+             zDomainRoot.freqz(omega,
+                               roots[root_idx][2], 
+                               roots[root_idx][0], 
+                               roots[root_idx][1])
+        abs_h_f_theo = tmp_abs_h_f_theo*abs_h_f_theo
+        angle_deg_h_f_theo = angle_deg_h_f_theo + tmp_angle_deg_h_f_theo
+    angle_deg_h_f_theo = np.rad2deg(np.arctan2(np.sin(np.deg2rad(angle_deg_h_f_theo)), np.cos(np.deg2rad(angle_deg_h_f_theo)))) # this is done to wrap the phase response
 
     f = omega/(2*np.pi)
     
@@ -270,22 +300,10 @@ def testByPlotting(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_de
 
 if(__name__=='__main__'):
 
-    z_domain_root_within_unit_circle =  True; MA_or_AR = 'MA'; square_freq_mag_cos_poly_root = -(-1.1)
-    #z_domain_root_within_unit_circle = False; MA_or_AR = 'MA'; square_freq_mag_cos_poly_root = -(-1.1)
-    #z_domain_root_within_unit_circle =  True; MA_or_AR = 'AR'; square_freq_mag_cos_poly_root = -(-1.1)
-    #z_domain_root_within_unit_circle = False; MA_or_AR = 'AR'; square_freq_mag_cos_poly_root = -(-1.1)         # should generate a ValueError
-    #z_domain_root_within_unit_circle =  True; MA_or_AR = 'MA'; square_freq_mag_cos_poly_root = -(-0.5 + 0.05j)
-    #z_domain_root_within_unit_circle = False; MA_or_AR = 'MA'; square_freq_mag_cos_poly_root = -(-0.5 + 0.05j)
-    #z_domain_root_within_unit_circle =  True; MA_or_AR = 'AR'; square_freq_mag_cos_poly_root = -(-0.5 + 0.05j)
-    #z_domain_root_within_unit_circle = False; MA_or_AR = 'AR'; square_freq_mag_cos_poly_root = -(-0.5 + 0.05j) # should generate a ValueError
+    roots = \
+        [(False, 'MA',    1.1), 
+         ( True, 'MA',   -1.4), 
+         ( True, 'AR', -( 0.45 + 0.86j)), 
+         ( True, 'AR', -(-5.45 + 4.76j))]
 
-    [MA_z_coefs, AR_z_coefs] = zDomainRoot.z_trans_coefs(square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR)
-
-    [omega, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs)
-    abs_h_f_emp = np.abs(h_f_emp)
-    angle_deg_h_f_emp = np.rad2deg(np.angle(h_f_emp))
-    
-    [abs_h_f_theo, angle_deg_h_f_theo] = zDomainRoot.freqz(omega, square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR)
-    
-    testByPlotting(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo)
-
+    testMultipleRoots(roots)
