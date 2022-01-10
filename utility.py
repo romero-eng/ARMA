@@ -231,6 +231,35 @@ class zDomainRoot():
         return [abs_h_f_theo, angle_deg_h_f_theo]
 
 
+def calculateChebyshevSpectrumFromSquaredFrequencyMagnitudeCosinePolynomialRoots(root_tuples_list):
+
+    real_roots = []
+    complex_roots = []
+    for root_tuple in root_tuples_list:
+        if(isinstance(root_tuple[2], complex)):
+            complex_roots.append(root_tuple[2])
+        else:
+            real_roots.append(root_tuple[2])
+
+    real_roots = np.array(real_roots)
+    complex_roots = np.array(complex_roots)
+    complex_roots = np.hstack((complex_roots, np.conjugate(complex_roots)))
+    roots = np.hstack((real_roots, complex_roots))
+
+    cheb_series_coefs = np.polynomial.chebyshev.poly2cheb(np.real(np.polynomial.polynomial.polyfromroots(roots)))
+    
+    squared_abs_h_f_cheb_theo = np.zeros(omega.shape)
+    for n in np.arange(0, len(cheb_series_coefs), 1):
+        squared_abs_h_f_cheb_theo = squared_abs_h_f_cheb_theo + cheb_series_coefs[n]*np.cos(n*omega)
+    
+    if( np.sum(np.sign(real_roots) == 1) % 2  == 1 ):
+        squared_abs_h_f_cheb_theo = -1*squared_abs_h_f_cheb_theo
+
+    abs_h_f_cheb_theo = np.sqrt(squared_abs_h_f_cheb_theo)
+
+    return abs_h_f_cheb_theo
+
+
 def generateEmpiricalAndTheoreticalSpectralResponses(root_tuples_list):
 
     num_roots = len(root_tuples_list)
@@ -313,17 +342,17 @@ def generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, a
 
 if(__name__=='__main__'):
 
-    #root_tuples_list = \
-    #    [(False, 'MA',    1.1), 
-    #     ( True, 'MA',   -1.4), 
-    #     ( True, 'AR', -( 0.45 + 0.86j)), 
-    #     ( True, 'AR', -(-5.45 + 4.76j))]
-
     root_tuples_list = \
         [(False, 'MA',    1.1), 
          ( True, 'MA',   -1.4), 
-         ( True, 'MA', -( 0.45 + 0.86j)), 
-         ( True, 'MA', -(-5.45 + 4.76j))]
+         ( True, 'AR', -( 0.45 + 0.86j)), 
+         ( True, 'AR', -(-5.45 + 4.76j))]
+
+    #root_tuples_list = \
+    #    [(False, 'MA',    1.1), 
+    #     ( True, 'MA',   -1.4), 
+    #     ( True, 'MA', -( 0.45 + 0.86j)), 
+    #     ( True, 'MA', -(-5.45 + 4.76j))]
 
     #root_tuples_list = \
     #    [(False, 'MA',  -1.1),
@@ -337,31 +366,19 @@ if(__name__=='__main__'):
     ###########################################################################################################################################################
     ###########################################################################################################################################################
 
-    real_roots = []
-    complex_roots = []
+    AR_root_tuples_list = []
+    MA_root_tuples_list = []
     for root_tuple in root_tuples_list:
-        if(isinstance(root_tuple[2], complex)):
-            complex_roots.append(root_tuple[2])
+        if(root_tuple[1] == 'MA'):
+            MA_root_tuples_list.append(root_tuple)
+        elif(root_tuple[1] == 'AR'):
+            AR_root_tuples_list.append(root_tuple)
         else:
-            real_roots.append(root_tuple[2])
+            raise ValueError('Unexpected value for MA/AR description for the following root: ' + str(root_tuple))
 
-    real_roots = np.array(real_roots)
-    complex_roots = np.array(complex_roots)
-    complex_roots = np.hstack((complex_roots, np.conjugate(complex_roots)))
-    roots = np.hstack((real_roots, complex_roots))
-
-    cheb_poly_coefs = np.real(np.polynomial.polynomial.polyfromroots(roots))
-    cheb_series_coefs = np.polynomial.chebyshev.poly2cheb(cheb_poly_coefs)
-    
-    squared_abs_h_f_cheb_theo = np.zeros(omega.shape)
-    for n in np.arange(0, len(cheb_poly_coefs), 1):
-        #squared_abs_h_f_cheb_theo = squared_abs_h_f_cheb_theo + cheb_poly_coefs[n]*np.power(np.cos(omega), n)
-        squared_abs_h_f_cheb_theo = squared_abs_h_f_cheb_theo + cheb_series_coefs[n]*np.cos(n*omega)
-    
-    if( np.sum(np.sign(real_roots) == 1) % 2  == 1 ):
-        squared_abs_h_f_cheb_theo = -1*squared_abs_h_f_cheb_theo
-
-    abs_h_f_cheb_theo = np.sqrt(squared_abs_h_f_cheb_theo)
+    AR_abs_h_f_cheb_theo = calculateChebyshevSpectrumFromSquaredFrequencyMagnitudeCosinePolynomialRoots(AR_root_tuples_list)
+    MA_abs_h_f_cheb_theo = calculateChebyshevSpectrumFromSquaredFrequencyMagnitudeCosinePolynomialRoots(MA_root_tuples_list)
+    abs_h_f_cheb_theo = MA_abs_h_f_cheb_theo/AR_abs_h_f_cheb_theo
 
     normed_abs_h_f_emp = abs_h_f_emp/np.amax(abs_h_f_emp)
     normed_abs_h_f_theo = abs_h_f_theo/np.amax(abs_h_f_theo)
