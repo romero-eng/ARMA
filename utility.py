@@ -141,7 +141,7 @@ class zDomainSingleRealRoot:
         gamma = np.abs(square_freq_mag_cos_poly_root)
 
         if(gamma <= 1):
-            error('The given single real root must have an absolute value greater than one.')
+            raise ValueError('The given single real root must have an absolute value greater than one.')
 
         return [gamma, rho_sign]
 
@@ -231,18 +231,18 @@ class zDomainRoot():
         return [abs_h_f_theo, angle_deg_h_f_theo]
 
 
-def testMultipleRoots(roots_tuple):
+def generateEmpiricalAndTheoreticalSpectralResponses(root_tuples_list):
 
-    num_roots = len(roots_tuple)
+    num_roots = len(root_tuples_list)
 
     MA_z_coefs = np.array([1])
     AR_z_coefs = np.array([1])
     for root_idx in np.arange(0, num_roots):
         [tmp_MA_z_coefs,
          tmp_AR_z_coefs] = \
-             zDomainRoot.z_trans_coefs(roots_tuple[root_idx][2], 
-                                       roots_tuple[root_idx][0], 
-                                       roots_tuple[root_idx][1])
+             zDomainRoot.z_trans_coefs(root_tuples_list[root_idx][2], 
+                                       root_tuples_list[root_idx][0], 
+                                       root_tuples_list[root_idx][1])
         MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
         AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
 
@@ -256,16 +256,21 @@ def testMultipleRoots(roots_tuple):
         [tmp_abs_h_f_theo,
          tmp_angle_deg_h_f_theo] = \
              zDomainRoot.freqz(omega,
-                               roots_tuple[root_idx][2], 
-                               roots_tuple[root_idx][0], 
-                               roots_tuple[root_idx][1])
+                               root_tuples_list[root_idx][2], 
+                               root_tuples_list[root_idx][0], 
+                               root_tuples_list[root_idx][1])
         abs_h_f_theo = tmp_abs_h_f_theo*abs_h_f_theo
         angle_deg_h_f_theo = angle_deg_h_f_theo + tmp_angle_deg_h_f_theo
     angle_deg_h_f_theo = np.rad2deg(np.arctan2(np.sin(np.deg2rad(angle_deg_h_f_theo)), np.cos(np.deg2rad(angle_deg_h_f_theo)))) # this is done to wrap the phase response
 
+    return [omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo]
+
+
+def generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo):
+
     f = omega/(2*np.pi)
     
-    [fig, axs] = plt.subplots(2, 2)
+    [fig1, axs] = plt.subplots(2, 3)
 
     axs[0, 0].plot(f, abs_h_f_emp)
     axs[0, 0].set_xlim([0, 0.5])
@@ -274,18 +279,18 @@ def testMultipleRoots(roots_tuple):
     axs[0, 0].set_xlabel('Frequency (Hz)')
     axs[0, 0].set_title('Empirical Magnitude')
     
-    axs[0, 1].plot(f, angle_deg_h_f_emp)
-    axs[0, 1].set_xlim([0, 0.5])
-    axs[0, 1].grid()
-    axs[0, 1].set_xlabel('Frequency (Hz)')
-    axs[0, 1].set_title('Empirical Phase')
-    
-    axs[1, 0].plot(f, abs_h_f_theo)
+    axs[1, 0].plot(f, angle_deg_h_f_emp)
     axs[1, 0].set_xlim([0, 0.5])
-    axs[1, 0].set_ylim(bottom=0)
     axs[1, 0].grid()
     axs[1, 0].set_xlabel('Frequency (Hz)')
-    axs[1, 0].set_title('Theoretical Magnitude')
+    axs[1, 0].set_title('Empirical Phase')
+    
+    axs[0, 1].plot(f, abs_h_f_theo)
+    axs[0, 1].set_xlim([0, 0.5])
+    axs[0, 1].set_ylim(bottom=0)
+    axs[0, 1].grid()
+    axs[0, 1].set_xlabel('Frequency (Hz)')
+    axs[0, 1].set_title('Theoretical Magnitude')
     
     axs[1, 1].plot(f, angle_deg_h_f_theo)
     axs[1, 1].set_xlim([0, 0.5])
@@ -293,17 +298,77 @@ def testMultipleRoots(roots_tuple):
     axs[1, 1].set_xlabel('Frequency (Hz)')
     axs[1, 1].set_title('Theoretical Phase')
 
-    fig.tight_layout()
+    axs[0, 2].plot(f, abs_h_f_cheb_theo)
+    axs[0, 2].set_xlim([0, 0.5])
+    if(not np.any(abs_h_f_cheb_theo < 0)):
+        axs[0, 2].set_ylim(bottom=0)
+    axs[0, 2].grid()
+    axs[0, 2].set_xlabel('Frequency (Hz)')
+    axs[0, 2].set_title('Chebyshev Magnitude')
+
+    fig1.tight_layout()
 
     plt.show()
 
 
 if(__name__=='__main__'):
 
-    roots_tuple = \
+    #root_tuples_list = \
+    #    [(False, 'MA',    1.1), 
+    #     ( True, 'MA',   -1.4), 
+    #     ( True, 'AR', -( 0.45 + 0.86j)), 
+    #     ( True, 'AR', -(-5.45 + 4.76j))]
+
+    root_tuples_list = \
         [(False, 'MA',    1.1), 
          ( True, 'MA',   -1.4), 
-         ( True, 'AR', -( 0.45 + 0.86j)), 
-         ( True, 'AR', -(-5.45 + 4.76j))]
+         ( True, 'MA', -( 0.45 + 0.86j)), 
+         ( True, 'MA', -(-5.45 + 4.76j))]
 
-    testMultipleRoots(roots_tuple)
+    #root_tuples_list = \
+    #    [(False, 'MA',  -1.1),
+    #     ( True, 'MA',   1.4),
+    #     ( True, 'MA', -31.3),
+    #     ( True, 'MA',  29)]
+
+    [omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo] = generateEmpiricalAndTheoreticalSpectralResponses(root_tuples_list)
+
+    ###########################################################################################################################################################
+    ###########################################################################################################################################################
+    ###########################################################################################################################################################
+
+    real_roots = []
+    complex_roots = []
+    for root_tuple in root_tuples_list:
+        if(isinstance(root_tuple[2], complex)):
+            complex_roots.append(root_tuple[2])
+        else:
+            real_roots.append(root_tuple[2])
+
+    real_roots = np.array(real_roots)
+    complex_roots = np.array(complex_roots)
+    complex_roots = np.hstack((complex_roots, np.conjugate(complex_roots)))
+    roots = np.hstack((real_roots, complex_roots))
+
+    cheb_poly_coefs = np.real(np.polynomial.polynomial.polyfromroots(roots))
+    cheb_series_coefs = np.polynomial.chebyshev.poly2cheb(cheb_poly_coefs)
+    
+    squared_abs_h_f_cheb_theo = np.zeros(omega.shape)
+    for n in np.arange(0, len(cheb_poly_coefs), 1):
+        #squared_abs_h_f_cheb_theo = squared_abs_h_f_cheb_theo + cheb_poly_coefs[n]*np.power(np.cos(omega), n)
+        squared_abs_h_f_cheb_theo = squared_abs_h_f_cheb_theo + cheb_series_coefs[n]*np.cos(n*omega)
+    
+    if( np.sum(np.sign(real_roots) == 1) % 2  == 1 ):
+        squared_abs_h_f_cheb_theo = -1*squared_abs_h_f_cheb_theo
+
+    abs_h_f_cheb_theo = np.sqrt(squared_abs_h_f_cheb_theo)
+
+    normed_abs_h_f_emp = abs_h_f_emp/np.amax(abs_h_f_emp)
+    normed_abs_h_f_theo = abs_h_f_theo/np.amax(abs_h_f_theo)
+    normed_abs_h_f_cheb_theo = abs_h_f_cheb_theo/np.amax(abs_h_f_cheb_theo)
+
+    ###########################################################################################################################################################
+    ###########################################################################################################################################################
+    ###########################################################################################################################################################
+
+    generateSpectralPlots(omega, normed_abs_h_f_emp, angle_deg_h_f_emp, normed_abs_h_f_theo, angle_deg_h_f_theo, normed_abs_h_f_cheb_theo)
