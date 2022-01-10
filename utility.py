@@ -249,7 +249,8 @@ class magnitudeDomainRoots():
         complex_roots = np.hstack((complex_roots, np.conjugate(complex_roots)))
         roots = np.hstack((real_roots, complex_roots))
 
-        cheb_series_coefs = np.polynomial.chebyshev.poly2cheb(np.real(np.polynomial.polynomial.polyfromroots(roots)))
+        cheb_poly_coefs = np.real(np.polynomial.polynomial.polyfromroots(roots))
+        cheb_series_coefs = np.polynomial.chebyshev.poly2cheb(cheb_poly_coefs)
     
         squared_abs_h_f_cheb_theo = np.zeros(omega.shape)
         for n in np.arange(0, len(cheb_series_coefs), 1):
@@ -386,9 +387,9 @@ if(__name__=='__main__'):
     #################################################################################################################################################################################################
     #################################################################################################################################################################################################
 
-    generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo)
+    #generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo)
 
-    #normed_abs_h_f_emp = abs_h_f_emp/np.amax(abs_h_f_emp)
-    #normed_abs_h_f_theo = abs_h_f_theo/np.amax(abs_h_f_theo)
-    #normed_abs_h_f_cheb_theo = abs_h_f_cheb_theo/np.amax(abs_h_f_cheb_theo)
-    #generateSpectralPlots(omega, normed_abs_h_f_emp, angle_deg_h_f_emp, normed_abs_h_f_theo, angle_deg_h_f_theo, normed_abs_h_f_cheb_theo)
+    normed_abs_h_f_emp = abs_h_f_emp/np.amax(abs_h_f_emp)
+    normed_abs_h_f_theo = abs_h_f_theo/np.amax(abs_h_f_theo)
+    normed_abs_h_f_cheb_theo = abs_h_f_cheb_theo/np.amax(abs_h_f_cheb_theo)
+    generateSpectralPlots(omega, normed_abs_h_f_emp, angle_deg_h_f_emp, normed_abs_h_f_theo, angle_deg_h_f_theo, normed_abs_h_f_cheb_theo)
