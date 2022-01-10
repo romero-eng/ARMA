@@ -311,7 +311,9 @@ def generateEmpiricalAndTheoreticalResponses(root_tuples_list):
         angle_deg_h_f_theo = angle_deg_h_f_theo + tmp_angle_deg_h_f_theo
     angle_deg_h_f_theo = np.rad2deg(np.arctan2(np.sin(np.deg2rad(angle_deg_h_f_theo)), np.cos(np.deg2rad(angle_deg_h_f_theo)))) # this is done to wrap the phase response
 
-    return [omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo]
+    abs_h_f_cheb_theo = calculateEntireChebyshevPowerSpectrum(root_tuples_list)
+
+    return [omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo]
 
 
 def generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo):
@@ -367,8 +369,7 @@ if(__name__=='__main__'):
          ( True, 'AR', -( 0.45 + 0.86j)), 
          ( True, 'AR', -(-5.45 + 4.76j))]
 
-    [omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo] = generateEmpiricalAndTheoreticalResponses(root_tuples_list)
-    abs_h_f_cheb_theo = calculateEntireChebyshevPowerSpectrum(root_tuples_list)
+    [omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo] = generateEmpiricalAndTheoreticalResponses(root_tuples_list)
 
     normed_abs_h_f_emp = abs_h_f_emp/np.amax(abs_h_f_emp)
     normed_abs_h_f_theo = abs_h_f_theo/np.amax(abs_h_f_theo)
