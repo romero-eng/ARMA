@@ -231,7 +231,7 @@ class zDomainRoot():
         return [abs_h_f_theo, angle_deg_h_f_theo]
 
 
-def calculatePartialChebyshevPowerSpectrum(MA_or_AR_root_tuples_list):
+def calculatePartialChebyshevPowerSpectrum(omega, MA_or_AR_root_tuples_list):
 
     real_roots = []
     complex_roots = []
@@ -260,7 +260,7 @@ def calculatePartialChebyshevPowerSpectrum(MA_or_AR_root_tuples_list):
     return abs_h_f_cheb_theo
 
 
-def calculateEntireChebyshevPowerSpectrum(root_tuples_list):
+def calculateEntireChebyshevPowerSpectrum(omega, root_tuples_list):
 
     AR_root_tuples_list = []
     MA_root_tuples_list = []
@@ -272,8 +272,8 @@ def calculateEntireChebyshevPowerSpectrum(root_tuples_list):
         else:
             raise ValueError('Unexpected value for MA/AR description for the following root: ' + str(root_tuple))
 
-    AR_abs_h_f_cheb_theo = calculatePartialChebyshevPowerSpectrum(AR_root_tuples_list)
-    MA_abs_h_f_cheb_theo = calculatePartialChebyshevPowerSpectrum(MA_root_tuples_list)
+    AR_abs_h_f_cheb_theo = calculatePartialChebyshevPowerSpectrum(omega, AR_root_tuples_list)
+    MA_abs_h_f_cheb_theo = calculatePartialChebyshevPowerSpectrum(omega, MA_root_tuples_list)
     abs_h_f_cheb_theo = MA_abs_h_f_cheb_theo/AR_abs_h_f_cheb_theo
 
     return abs_h_f_cheb_theo
@@ -311,7 +311,7 @@ def generateEmpiricalAndTheoreticalResponses(root_tuples_list):
         angle_deg_h_f_theo = angle_deg_h_f_theo + tmp_angle_deg_h_f_theo
     angle_deg_h_f_theo = np.rad2deg(np.arctan2(np.sin(np.deg2rad(angle_deg_h_f_theo)), np.cos(np.deg2rad(angle_deg_h_f_theo)))) # this is done to wrap the phase response
 
-    abs_h_f_cheb_theo = calculateEntireChebyshevPowerSpectrum(root_tuples_list)
+    abs_h_f_cheb_theo = calculateEntireChebyshevPowerSpectrum(omega, root_tuples_list)
 
     return [omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo]
 
