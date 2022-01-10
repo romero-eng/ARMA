@@ -231,89 +231,92 @@ class zDomainRoot():
         return [abs_h_f_theo, angle_deg_h_f_theo]
 
 
-def calculatePartialChebyshevPowerSpectrum(omega, MA_or_AR_root_tuples_list):
+class magnitudeDomainRoots():
 
-    real_roots = []
-    complex_roots = []
-    for root_tuple in MA_or_AR_root_tuples_list:
-        if(isinstance(root_tuple[2], complex)):
-            complex_roots.append(root_tuple[2])
-        else:
-            real_roots.append(root_tuple[2])
+    @staticmethod
+    def calculatePartialChebyshevPowerSpectrum(omega, MA_or_AR_root_tuples_list):
 
-    real_roots = np.array(real_roots)
-    complex_roots = np.array(complex_roots)
-    complex_roots = np.hstack((complex_roots, np.conjugate(complex_roots)))
-    roots = np.hstack((real_roots, complex_roots))
+        real_roots = []
+        complex_roots = []
+        for root_tuple in MA_or_AR_root_tuples_list:
+            if(isinstance(root_tuple[2], complex)):
+                complex_roots.append(root_tuple[2])
+            else:
+                real_roots.append(root_tuple[2])
 
-    cheb_series_coefs = np.polynomial.chebyshev.poly2cheb(np.real(np.polynomial.polynomial.polyfromroots(roots)))
+        real_roots = np.array(real_roots)
+        complex_roots = np.array(complex_roots)
+        complex_roots = np.hstack((complex_roots, np.conjugate(complex_roots)))
+        roots = np.hstack((real_roots, complex_roots))
+
+        cheb_series_coefs = np.polynomial.chebyshev.poly2cheb(np.real(np.polynomial.polynomial.polyfromroots(roots)))
     
-    squared_abs_h_f_cheb_theo = np.zeros(omega.shape)
-    for n in np.arange(0, len(cheb_series_coefs), 1):
-        squared_abs_h_f_cheb_theo = squared_abs_h_f_cheb_theo + cheb_series_coefs[n]*np.cos(n*omega)
+        squared_abs_h_f_cheb_theo = np.zeros(omega.shape)
+        for n in np.arange(0, len(cheb_series_coefs), 1):
+            squared_abs_h_f_cheb_theo = squared_abs_h_f_cheb_theo + cheb_series_coefs[n]*np.cos(n*omega)
     
-    if( np.sum(np.sign(real_roots) == 1) % 2  == 1 ):
-        squared_abs_h_f_cheb_theo = -1*squared_abs_h_f_cheb_theo
+        if( np.sum(np.sign(real_roots) == 1) % 2  == 1 ):
+            squared_abs_h_f_cheb_theo = -1*squared_abs_h_f_cheb_theo
 
-    abs_h_f_cheb_theo = np.sqrt(squared_abs_h_f_cheb_theo)
+        abs_h_f_cheb_theo = np.sqrt(squared_abs_h_f_cheb_theo)
 
-    return abs_h_f_cheb_theo
+        return abs_h_f_cheb_theo
 
+    @staticmethod
+    def calculateEntireChebyshevPowerSpectrum(omega, root_tuples_list):
 
-def calculateEntireChebyshevPowerSpectrum(omega, root_tuples_list):
+        AR_root_tuples_list = []
+        MA_root_tuples_list = []
+        for root_tuple in root_tuples_list:
+            if(root_tuple[1] == 'MA'):
+                MA_root_tuples_list.append(root_tuple)
+            elif(root_tuple[1] == 'AR'):
+                AR_root_tuples_list.append(root_tuple)
+            else:
+                raise ValueError('Unexpected value for MA/AR description for the following root: ' + str(root_tuple))
 
-    AR_root_tuples_list = []
-    MA_root_tuples_list = []
-    for root_tuple in root_tuples_list:
-        if(root_tuple[1] == 'MA'):
-            MA_root_tuples_list.append(root_tuple)
-        elif(root_tuple[1] == 'AR'):
-            AR_root_tuples_list.append(root_tuple)
-        else:
-            raise ValueError('Unexpected value for MA/AR description for the following root: ' + str(root_tuple))
+        AR_abs_h_f_cheb_theo = magnitudeDomainRoots.calculatePartialChebyshevPowerSpectrum(omega, AR_root_tuples_list)
+        MA_abs_h_f_cheb_theo = magnitudeDomainRoots.calculatePartialChebyshevPowerSpectrum(omega, MA_root_tuples_list)
+        abs_h_f_cheb_theo = MA_abs_h_f_cheb_theo/AR_abs_h_f_cheb_theo
 
-    AR_abs_h_f_cheb_theo = calculatePartialChebyshevPowerSpectrum(omega, AR_root_tuples_list)
-    MA_abs_h_f_cheb_theo = calculatePartialChebyshevPowerSpectrum(omega, MA_root_tuples_list)
-    abs_h_f_cheb_theo = MA_abs_h_f_cheb_theo/AR_abs_h_f_cheb_theo
+        return abs_h_f_cheb_theo
 
-    return abs_h_f_cheb_theo
+    @staticmethod
+    def generateEmpiricalAndTheoreticalResponses(root_tuples_list):
 
+        num_roots = len(root_tuples_list)
 
-def generateEmpiricalAndTheoreticalResponses(root_tuples_list):
+        MA_z_coefs = np.array([1])
+        AR_z_coefs = np.array([1])
+        for root_idx in np.arange(0, num_roots):
+            [tmp_MA_z_coefs,
+             tmp_AR_z_coefs] = \
+                 zDomainRoot.z_trans_coefs(root_tuples_list[root_idx][2], 
+                                           root_tuples_list[root_idx][0], 
+                                           root_tuples_list[root_idx][1])
+            MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
+            AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
 
-    num_roots = len(root_tuples_list)
+        [omega, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs)
+        abs_h_f_emp = np.abs(h_f_emp)
+        angle_deg_h_f_emp = np.rad2deg(np.angle(h_f_emp))
 
-    MA_z_coefs = np.array([1])
-    AR_z_coefs = np.array([1])
-    for root_idx in np.arange(0, num_roots):
-        [tmp_MA_z_coefs,
-         tmp_AR_z_coefs] = \
-             zDomainRoot.z_trans_coefs(root_tuples_list[root_idx][2], 
-                                       root_tuples_list[root_idx][0], 
-                                       root_tuples_list[root_idx][1])
-        MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
-        AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
+        abs_h_f_theo = np.ones(abs_h_f_emp.shape)
+        angle_deg_h_f_theo = np.zeros(angle_deg_h_f_emp.shape)
+        for root_idx in np.arange(0, num_roots):
+            [tmp_abs_h_f_theo,
+             tmp_angle_deg_h_f_theo] = \
+                 zDomainRoot.freqz(omega,
+                                   root_tuples_list[root_idx][2], 
+                                   root_tuples_list[root_idx][0], 
+                                   root_tuples_list[root_idx][1])
+            abs_h_f_theo = tmp_abs_h_f_theo*abs_h_f_theo
+            angle_deg_h_f_theo = angle_deg_h_f_theo + tmp_angle_deg_h_f_theo
+        angle_deg_h_f_theo = np.rad2deg(np.arctan2(np.sin(np.deg2rad(angle_deg_h_f_theo)), np.cos(np.deg2rad(angle_deg_h_f_theo)))) # this is done to wrap the phase response
 
-    [omega, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs)
-    abs_h_f_emp = np.abs(h_f_emp)
-    angle_deg_h_f_emp = np.rad2deg(np.angle(h_f_emp))
+        abs_h_f_cheb_theo = magnitudeDomainRoots.calculateEntireChebyshevPowerSpectrum(omega, root_tuples_list)
 
-    abs_h_f_theo = np.ones(abs_h_f_emp.shape)
-    angle_deg_h_f_theo = np.zeros(angle_deg_h_f_emp.shape)
-    for root_idx in np.arange(0, num_roots):
-        [tmp_abs_h_f_theo,
-         tmp_angle_deg_h_f_theo] = \
-             zDomainRoot.freqz(omega,
-                               root_tuples_list[root_idx][2], 
-                               root_tuples_list[root_idx][0], 
-                               root_tuples_list[root_idx][1])
-        abs_h_f_theo = tmp_abs_h_f_theo*abs_h_f_theo
-        angle_deg_h_f_theo = angle_deg_h_f_theo + tmp_angle_deg_h_f_theo
-    angle_deg_h_f_theo = np.rad2deg(np.arctan2(np.sin(np.deg2rad(angle_deg_h_f_theo)), np.cos(np.deg2rad(angle_deg_h_f_theo)))) # this is done to wrap the phase response
-
-    abs_h_f_cheb_theo = calculateEntireChebyshevPowerSpectrum(omega, root_tuples_list)
-
-    return [omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo]
+        return [omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo]
 
 
 def generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo):
@@ -369,7 +372,7 @@ if(__name__=='__main__'):
          ( True, 'AR', -( 0.45 + 0.86j)), 
          ( True, 'AR', -(-5.45 + 4.76j))]
 
-    [omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo] = generateEmpiricalAndTheoreticalResponses(root_tuples_list)
+    [omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo] = magnitudeDomainRoots.generateEmpiricalAndTheoreticalResponses(root_tuples_list)
 
     normed_abs_h_f_emp = abs_h_f_emp/np.amax(abs_h_f_emp)
     normed_abs_h_f_theo = abs_h_f_theo/np.amax(abs_h_f_theo)
