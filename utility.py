@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.signal as dsp
+import matplotlib
 import matplotlib.pyplot as plt
 
 
@@ -322,6 +323,8 @@ class magnitudeDomainRoots():
 
 def generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo):
 
+    usetex = matplotlib.checkdep_usetex(True)
+
     f = omega/(2*np.pi)
     
     plt.rc('text', usetex=True)
@@ -334,7 +337,8 @@ def generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, a
     axs[0, 0].set_ylim(bottom=0)
     axs[0, 0].grid()
     axs[0, 0].set_xlabel('Frequency (Hz)')
-    axs[0, 0].set_ylabel(r'$\big|h(f)\big|$')
+    if(usetex):
+        axs[0, 0].set_ylabel(r'$\big|h(f)\big|$')
     axs[0, 0].set_title('Empirical Magnitude')
     
     axs[1, 0].plot(f, angle_deg_h_f_emp)
@@ -349,14 +353,16 @@ def generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, a
     axs[0, 1].set_ylim(bottom=0)
     axs[0, 1].grid()
     axs[0, 1].set_xlabel('Frequency (Hz)')
-    axs[0, 1].set_ylabel(r'$\big|h(f)\big|$')
+    if(usetex):
+        axs[0, 1].set_ylabel(r'$\big|h(f)\big|$')
     axs[0, 1].set_title('Theoretical Magnitude')
     
     axs[1, 1].plot(f, angle_deg_h_f_theo)
     axs[1, 1].set_xlim([0, 0.5])
     axs[1, 1].grid()
     axs[1, 1].set_xlabel('Frequency (Hz)')
-    axs[1, 1].set_ylabel(r'${\angle}h(f)^{\circ}$')
+    if(usetex):
+        axs[1, 1].set_ylabel(r'${\angle}h(f)^{\circ}$')
     axs[1, 1].set_title('Theoretical Phase')
 
     axs[0, 2].plot(f, abs_h_f_cheb_theo)
@@ -365,7 +371,8 @@ def generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, a
         axs[0, 2].set_ylim(bottom=0)
     axs[0, 2].grid()
     axs[0, 2].set_xlabel('Frequency (Hz)')
-    axs[0, 2].set_ylabel(r'$\big|h(f)\big||$')
+    if(usetex):
+        axs[0, 2].set_ylabel(r'$\big|h(f)\big||$')
     axs[0, 2].set_title('Chebyshev Magnitude')
 
     fig1.tight_layout()
