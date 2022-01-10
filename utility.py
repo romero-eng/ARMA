@@ -231,11 +231,11 @@ class zDomainRoot():
         return [abs_h_f_theo, angle_deg_h_f_theo]
 
 
-def calculateChebyshevSpectrumFromSquaredFrequencyMagnitudeCosinePolynomialRoots(root_tuples_list):
+def calculatePartialChebyshevPowerSpectrum(MA_or_AR_root_tuples_list):
 
     real_roots = []
     complex_roots = []
-    for root_tuple in root_tuples_list:
+    for root_tuple in MA_or_AR_root_tuples_list:
         if(isinstance(root_tuple[2], complex)):
             complex_roots.append(root_tuple[2])
         else:
@@ -260,7 +260,26 @@ def calculateChebyshevSpectrumFromSquaredFrequencyMagnitudeCosinePolynomialRoots
     return abs_h_f_cheb_theo
 
 
-def generateEmpiricalAndTheoreticalSpectralResponses(root_tuples_list):
+def calculateEntireChebyshevPowerSpectrum(root_tuples_list):
+
+    AR_root_tuples_list = []
+    MA_root_tuples_list = []
+    for root_tuple in root_tuples_list:
+        if(root_tuple[1] == 'MA'):
+            MA_root_tuples_list.append(root_tuple)
+        elif(root_tuple[1] == 'AR'):
+            AR_root_tuples_list.append(root_tuple)
+        else:
+            raise ValueError('Unexpected value for MA/AR description for the following root: ' + str(root_tuple))
+
+    AR_abs_h_f_cheb_theo = calculatePartialChebyshevPowerSpectrum(AR_root_tuples_list)
+    MA_abs_h_f_cheb_theo = calculatePartialChebyshevPowerSpectrum(MA_root_tuples_list)
+    abs_h_f_cheb_theo = MA_abs_h_f_cheb_theo/AR_abs_h_f_cheb_theo
+
+    return abs_h_f_cheb_theo
+
+
+def generateEmpiricalAndTheoreticalResponses(root_tuples_list):
 
     num_roots = len(root_tuples_list)
 
@@ -348,44 +367,10 @@ if(__name__=='__main__'):
          ( True, 'AR', -( 0.45 + 0.86j)), 
          ( True, 'AR', -(-5.45 + 4.76j))]
 
-    #root_tuples_list = \
-    #    [(False, 'MA',    1.1), 
-    #     ( True, 'MA',   -1.4), 
-    #     ( True, 'MA', -( 0.45 + 0.86j)), 
-    #     ( True, 'MA', -(-5.45 + 4.76j))]
-
-    #root_tuples_list = \
-    #    [(False, 'MA',  -1.1),
-    #     ( True, 'MA',   1.4),
-    #     ( True, 'MA', -31.3),
-    #     ( True, 'MA',  29)]
-
-    [omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo] = generateEmpiricalAndTheoreticalSpectralResponses(root_tuples_list)
-
-    ###########################################################################################################################################################
-    ###########################################################################################################################################################
-    ###########################################################################################################################################################
-
-    AR_root_tuples_list = []
-    MA_root_tuples_list = []
-    for root_tuple in root_tuples_list:
-        if(root_tuple[1] == 'MA'):
-            MA_root_tuples_list.append(root_tuple)
-        elif(root_tuple[1] == 'AR'):
-            AR_root_tuples_list.append(root_tuple)
-        else:
-            raise ValueError('Unexpected value for MA/AR description for the following root: ' + str(root_tuple))
-
-    AR_abs_h_f_cheb_theo = calculateChebyshevSpectrumFromSquaredFrequencyMagnitudeCosinePolynomialRoots(AR_root_tuples_list)
-    MA_abs_h_f_cheb_theo = calculateChebyshevSpectrumFromSquaredFrequencyMagnitudeCosinePolynomialRoots(MA_root_tuples_list)
-    abs_h_f_cheb_theo = MA_abs_h_f_cheb_theo/AR_abs_h_f_cheb_theo
+    [omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo] = generateEmpiricalAndTheoreticalResponses(root_tuples_list)
+    abs_h_f_cheb_theo = calculateEntireChebyshevPowerSpectrum(root_tuples_list)
 
     normed_abs_h_f_emp = abs_h_f_emp/np.amax(abs_h_f_emp)
     normed_abs_h_f_theo = abs_h_f_theo/np.amax(abs_h_f_theo)
     normed_abs_h_f_cheb_theo = abs_h_f_cheb_theo/np.amax(abs_h_f_cheb_theo)
-
-    ###########################################################################################################################################################
-    ###########################################################################################################################################################
-    ###########################################################################################################################################################
-
     generateSpectralPlots(omega, normed_abs_h_f_emp, angle_deg_h_f_emp, normed_abs_h_f_theo, angle_deg_h_f_theo, normed_abs_h_f_cheb_theo)
