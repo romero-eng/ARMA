@@ -323,6 +323,9 @@ def generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, a
 
     f = omega/(2*np.pi)
     
+    plt.rc('text', usetex=True)
+    plt.rc('font', family='serif')
+
     [fig1, axs] = plt.subplots(2, 3)
 
     axs[0, 0].plot(f, abs_h_f_emp)
@@ -330,12 +333,14 @@ def generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, a
     axs[0, 0].set_ylim(bottom=0)
     axs[0, 0].grid()
     axs[0, 0].set_xlabel('Frequency (Hz)')
+    axs[0, 0].set_ylabel(r'$\big|h(f)\big|$')
     axs[0, 0].set_title('Empirical Magnitude')
     
     axs[1, 0].plot(f, angle_deg_h_f_emp)
     axs[1, 0].set_xlim([0, 0.5])
     axs[1, 0].grid()
     axs[1, 0].set_xlabel('Frequency (Hz)')
+    axs[1, 0].set_ylabel(r'${\angle}h(f)^{\circ}$')
     axs[1, 0].set_title('Empirical Phase')
     
     axs[0, 1].plot(f, abs_h_f_theo)
@@ -343,12 +348,14 @@ def generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, a
     axs[0, 1].set_ylim(bottom=0)
     axs[0, 1].grid()
     axs[0, 1].set_xlabel('Frequency (Hz)')
+    axs[0, 1].set_ylabel(r'$\big|h(f)\big|$')
     axs[0, 1].set_title('Theoretical Magnitude')
     
     axs[1, 1].plot(f, angle_deg_h_f_theo)
     axs[1, 1].set_xlim([0, 0.5])
     axs[1, 1].grid()
     axs[1, 1].set_xlabel('Frequency (Hz)')
+    axs[1, 1].set_ylabel(r'${\angle}h(f)^{\circ}$')
     axs[1, 1].set_title('Theoretical Phase')
 
     axs[0, 2].plot(f, abs_h_f_cheb_theo)
@@ -357,6 +364,7 @@ def generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, a
         axs[0, 2].set_ylim(bottom=0)
     axs[0, 2].grid()
     axs[0, 2].set_xlabel('Frequency (Hz)')
+    axs[0, 2].set_ylabel(r'$\big|h(f)\big||$')
     axs[0, 2].set_title('Chebyshev Magnitude')
 
     fig1.tight_layout()
@@ -374,7 +382,13 @@ if(__name__=='__main__'):
 
     [omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo] = magnitudeDomainRoots.generateEmpiricalAndTheoreticalResponses(root_tuples_list)
 
-    normed_abs_h_f_emp = abs_h_f_emp/np.amax(abs_h_f_emp)
-    normed_abs_h_f_theo = abs_h_f_theo/np.amax(abs_h_f_theo)
-    normed_abs_h_f_cheb_theo = abs_h_f_cheb_theo/np.amax(abs_h_f_cheb_theo)
-    generateSpectralPlots(omega, normed_abs_h_f_emp, angle_deg_h_f_emp, normed_abs_h_f_theo, angle_deg_h_f_theo, normed_abs_h_f_cheb_theo)
+    #################################################################################################################################################################################################
+    #################################################################################################################################################################################################
+    #################################################################################################################################################################################################
+
+    generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo)
+
+    #normed_abs_h_f_emp = abs_h_f_emp/np.amax(abs_h_f_emp)
+    #normed_abs_h_f_theo = abs_h_f_theo/np.amax(abs_h_f_theo)
+    #normed_abs_h_f_cheb_theo = abs_h_f_cheb_theo/np.amax(abs_h_f_cheb_theo)
+    #generateSpectralPlots(omega, normed_abs_h_f_emp, angle_deg_h_f_emp, normed_abs_h_f_theo, angle_deg_h_f_theo, normed_abs_h_f_cheb_theo)
