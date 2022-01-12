@@ -258,17 +258,20 @@ def calculatePartialChebyshevPowerSpectrum(omega, MA_or_AR_root_dicts_list):
     print(MA_or_AR_root_dicts_list)
     print(roots)
     print(cheb_poly_coefs)
+    print(cheb_series_coefs)
     
     squared_abs_h_f_cheb_theo = np.zeros(omega.shape)
     for n in np.arange(0, len(cheb_series_coefs), 1):
         squared_abs_h_f_cheb_theo = squared_abs_h_f_cheb_theo + cheb_series_coefs[n]*np.cos(n*omega)
     
-    if( np.sum(np.sign(real_roots) == 1) % 2  == 1 ):
-        squared_abs_h_f_cheb_theo = -1*squared_abs_h_f_cheb_theo
+    #if( np.sum(np.sign(real_roots) == 1) % 2  == 1 ):
+    #    squared_abs_h_f_cheb_theo = -1*squared_abs_h_f_cheb_theo
+    #
+    ##abs_h_f_cheb_theo = np.sqrt(squared_abs_h_f_cheb_theo)
+    ##
+    ##return abs_h_f_cheb_theo
 
-    abs_h_f_cheb_theo = np.sqrt(squared_abs_h_f_cheb_theo)
-
-    return abs_h_f_cheb_theo
+    return squared_abs_h_f_cheb_theo
 
 
 def calculateEntireChebyshevPowerSpectrum(omega, root_dicts_list):
@@ -356,7 +359,7 @@ if(__name__=='__main__'):
     #     {'z-domain root magnitude within unit circle' :  False, 'moving-average or auto-regressive' : 'MA', 'magnitude-domain root' :  1.1 - 1.9j}]
 
     root_dicts_list = \
-        [{'z-domain root magnitude within unit circle' :  False, 'moving-average or auto-regressive' : 'MA', 'magnitude-domain root' : -1.1 }]
+        [{'z-domain root magnitude within unit circle' :  False, 'moving-average or auto-regressive' : 'MA', 'magnitude-domain root' :  1.1 }]
 
     #############################################################################################################################################################################################################
     #############################################################################################################################################################################################################
@@ -381,14 +384,18 @@ if(__name__=='__main__'):
         angle_deg_h_f_theo = angle_deg_h_f_theo + tmp_angle_deg_h_f_theo
     angle_deg_h_f_theo = np.rad2deg(np.arctan2(np.sin(np.deg2rad(angle_deg_h_f_theo)), np.cos(np.deg2rad(angle_deg_h_f_theo)))) # this is done to wrap the phase response
 
-    abs_h_f_cheb_theo = calculateEntireChebyshevPowerSpectrum(omega, root_dicts_list)
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
+
+    #abs_h_f_cheb_theo = calculateEntireChebyshevPowerSpectrum(omega, root_dicts_list)
+    squared_abs_h_f_cheb_theo = calculatePartialChebyshevPowerSpectrum(omega, root_dicts_list)
 
     #############################################################################################################################################################################################################
     #############################################################################################################################################################################################################
     #############################################################################################################################################################################################################
 
-    normed_abs_h_f_emp = abs_h_f_emp/np.amax(abs_h_f_emp)
-    normed_abs_h_f_theo = abs_h_f_theo/np.amax(abs_h_f_theo)
-    normed_abs_h_f_cheb_theo = abs_h_f_cheb_theo/np.amax(abs_h_f_cheb_theo)
+    squared_normed_abs_h_f_emp = np.square(abs_h_f_emp)
+    squared_normed_abs_h_f_theo = np.square(abs_h_f_theo)
 
-    generateSpectralPlots(omega, normed_abs_h_f_emp, angle_deg_h_f_emp, normed_abs_h_f_theo, angle_deg_h_f_theo, normed_abs_h_f_cheb_theo)
+    generateSpectralPlots(omega, squared_normed_abs_h_f_emp, angle_deg_h_f_emp, squared_normed_abs_h_f_theo, angle_deg_h_f_theo, squared_abs_h_f_cheb_theo)
