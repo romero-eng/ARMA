@@ -237,7 +237,60 @@ def freqz(omega, root_dict):
     return [abs_h_f, angle_deg_h_f]
 
 
-def generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo):
+def calculatePartialChebyshevPowerSpectrum(omega, MA_or_AR_root_dicts_list):
+
+    real_roots = []
+    complex_roots = []
+    for root_dict in MA_or_AR_root_dicts_list:
+        if(isinstance(root_dict['magnitude-domain root'], complex)):
+            complex_roots.append(root_dict['magnitude-domain root'])
+        else:
+            real_roots.append(root_dict['magnitude-domain root'])
+
+    real_roots = np.array(real_roots)
+    complex_roots = np.array(complex_roots)
+    complex_roots = np.hstack((complex_roots, np.conjugate(complex_roots)))
+    roots = np.hstack((real_roots, complex_roots))
+
+    cheb_poly_coefs = np.real(np.polynomial.polynomial.polyfromroots(roots))
+    cheb_series_coefs = np.polynomial.chebyshev.poly2cheb(cheb_poly_coefs)
+
+    print(MA_or_AR_root_dicts_list)
+    print(roots)
+    print(cheb_poly_coefs)
+    
+    squared_abs_h_f_cheb_theo = np.zeros(omega.shape)
+    for n in np.arange(0, len(cheb_series_coefs), 1):
+        squared_abs_h_f_cheb_theo = squared_abs_h_f_cheb_theo + cheb_series_coefs[n]*np.cos(n*omega)
+    
+    if( np.sum(np.sign(real_roots) == 1) % 2  == 1 ):
+        squared_abs_h_f_cheb_theo = -1*squared_abs_h_f_cheb_theo
+
+    abs_h_f_cheb_theo = np.sqrt(squared_abs_h_f_cheb_theo)
+
+    return abs_h_f_cheb_theo
+
+
+def calculateEntireChebyshevPowerSpectrum(omega, root_dicts_list):
+
+    AR_root_dicts_list = []
+    MA_root_dicts_list = []
+    for root_dict in root_dicts_list:
+        if(root_dict['moving-average or auto-regressive'] == 'MA'):
+            MA_root_dicts_list.append(root_dict)
+        elif(root_dict['moving-average or auto-regressive'] == 'AR'):
+            AR_root_dicts_list.append(root_dict)
+        else:
+            raise ValueError('Unexpected value for MA/AR description for the following root: ' + str(root_dict))
+
+    AR_abs_h_f_cheb_theo = calculatePartialChebyshevPowerSpectrum(omega, AR_root_dicts_list)
+    MA_abs_h_f_cheb_theo = calculatePartialChebyshevPowerSpectrum(omega, MA_root_dicts_list)
+    abs_h_f_cheb_theo = MA_abs_h_f_cheb_theo/AR_abs_h_f_cheb_theo
+
+    return abs_h_f_cheb_theo
+
+
+def generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo):
 
     usetex = matplotlib.checkdep_usetex(True)
 
@@ -246,7 +299,7 @@ def generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, a
     plt.rc('text', usetex=True)
     plt.rc('font', family='serif')
 
-    [fig1, axs] = plt.subplots(2, 2)
+    [fig, axs] = plt.subplots(2, 3)
 
     axs[0, 0].plot(f, abs_h_f_emp)
     axs[0, 0].set_xlim([0, 0.5])
@@ -281,25 +334,61 @@ def generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, a
         axs[1, 1].set_ylabel(r'${\angle}h(f)^{\circ}$')
     axs[1, 1].set_title('Theoretical Phase')
 
-    fig1.tight_layout()
+    axs[0, 2].plot(f, abs_h_f_cheb_theo)
+    axs[0, 2].set_xlim([0, 0.5])
+    if(not np.any(abs_h_f_cheb_theo < 0)):
+        axs[0, 2].set_ylim(bottom=0)
+    axs[0, 2].grid()
+    axs[0, 2].set_xlabel('Frequency (Hz)')
+    if(usetex):
+        axs[0, 2].set_ylabel(r'$\big|h(f)\big|$')
+    axs[0, 2].set_title('Chebyshev Magnitude')
+
+    fig.tight_layout()
 
     plt.show()
 
 
 if(__name__=='__main__'):
 
+    #root_dicts_list = \
+    #    [{'z-domain root magnitude within unit circle' :  False, 'moving-average or auto-regressive' : 'MA', 'magnitude-domain root' : -1.1       },
+    #     {'z-domain root magnitude within unit circle' :  False, 'moving-average or auto-regressive' : 'MA', 'magnitude-domain root' :  1.1 - 1.9j}]
+
     root_dicts_list = \
-        [{'z-domain root magnitude within unit circle' :  False, 'moving-average or auto-regressive' : 'MA', 'magnitude-domain root' : -1.1       },
-         {'z-domain root magnitude within unit circle' :  False, 'moving-average or auto-regressive' : 'MA', 'magnitude-domain root' :  1.1 - 1.9j}]
+        [{'z-domain root magnitude within unit circle' :  False, 'moving-average or auto-regressive' : 'MA', 'magnitude-domain root' : -1.1 }]
 
-    root_dict = root_dicts_list[1]
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
 
-    [MA_z_coefs, AR_z_coefs] = z_trans_coefs(root_dict)
+    MA_z_coefs = np.array([1])
+    AR_z_coefs = np.array([1])
+    for root_dict in root_dicts_list:
+        [tmp_MA_z_coefs, tmp_AR_z_coefs] = z_trans_coefs(root_dict)
+        MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
+        AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
 
     [omega, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs)
     abs_h_f_emp = np.abs(h_f_emp)
     angle_deg_h_f_emp = np.rad2deg(np.angle(h_f_emp))
 
-    [abs_h_f_theo, angle_deg_h_f_theo] = freqz(omega, root_dict)
+    abs_h_f_theo = np.ones(abs_h_f_emp.shape)
+    angle_deg_h_f_theo = np.zeros(angle_deg_h_f_emp.shape)
+    for root_dict in root_dicts_list:
+        [tmp_abs_h_f_theo, tmp_angle_deg_h_f_theo] = freqz(omega, root_dict)
+        abs_h_f_theo = tmp_abs_h_f_theo*abs_h_f_theo
+        angle_deg_h_f_theo = angle_deg_h_f_theo + tmp_angle_deg_h_f_theo
+    angle_deg_h_f_theo = np.rad2deg(np.arctan2(np.sin(np.deg2rad(angle_deg_h_f_theo)), np.cos(np.deg2rad(angle_deg_h_f_theo)))) # this is done to wrap the phase response
 
-    generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo)
+    abs_h_f_cheb_theo = calculateEntireChebyshevPowerSpectrum(omega, root_dicts_list)
+
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
+
+    normed_abs_h_f_emp = abs_h_f_emp/np.amax(abs_h_f_emp)
+    normed_abs_h_f_theo = abs_h_f_theo/np.amax(abs_h_f_theo)
+    normed_abs_h_f_cheb_theo = abs_h_f_cheb_theo/np.amax(abs_h_f_cheb_theo)
+
+    generateSpectralPlots(omega, normed_abs_h_f_emp, angle_deg_h_f_emp, normed_abs_h_f_theo, angle_deg_h_f_theo, normed_abs_h_f_cheb_theo)
