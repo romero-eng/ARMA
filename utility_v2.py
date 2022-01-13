@@ -352,11 +352,11 @@ class frequencyResponseAndZTransformCalculations:
         plt.rc('text', usetex=True)
         plt.rc('font', family='serif')
 
-        [fig, axs] = plt.subplots(2, 3)
+        [fig, axs] = plt.subplots(2, 3, figsize=(11, 5))
 
         axs[0, 0].plot(f, abs_h_f_emp)
         axs[0, 0].set_xlim([0, 0.5])
-        axs[0, 0].set_ylim(bottom=0)
+        #axs[0, 0].set_ylim(bottom=0)
         axs[0, 0].grid()
         axs[0, 0].set_xlabel('Frequency (Hz)')
         if(usetex):
@@ -372,7 +372,7 @@ class frequencyResponseAndZTransformCalculations:
 
         axs[0, 1].plot(f, abs_h_f_theo)
         axs[0, 1].set_xlim([0, 0.5])
-        axs[0, 1].set_ylim(bottom=0)
+        #axs[0, 1].set_ylim(bottom=0)
         axs[0, 1].grid()
         axs[0, 1].set_xlabel('Frequency (Hz)')
         if(usetex):
@@ -389,8 +389,8 @@ class frequencyResponseAndZTransformCalculations:
 
         axs[0, 2].plot(f, abs_h_f_cheb_theo)
         axs[0, 2].set_xlim([0, 0.5])
-        if(not np.any(abs_h_f_cheb_theo < 0)):
-            axs[0, 2].set_ylim(bottom=0)
+        #if(not np.any(abs_h_f_cheb_theo < 0)):
+        #    axs[0, 2].set_ylim(bottom=0)
         axs[0, 2].grid()
         axs[0, 2].set_xlabel('Frequency (Hz)')
         if(usetex):
