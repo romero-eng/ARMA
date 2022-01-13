@@ -412,7 +412,11 @@ if(__name__=='__main__'):
          {'z-domain root magnitude within unit circle' :   True, 'moving-average or auto-regressive' : 'AR', 'magnitude-domain root' :  3.1       },
          {'z-domain root magnitude within unit circle' :   True, 'moving-average or auto-regressive' : 'AR', 'magnitude-domain root' :  0.4 - 9.2j}]
 
-    [omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo] = frequencyResponseAndZTransformCalculations.generateTheoreticalAndEmpiricalResponses(root_dicts_list)
+    [omega, 
+     abs_h_f_emp, angle_deg_h_f_emp, 
+     abs_h_f_theo, angle_deg_h_f_theo, 
+     abs_h_f_cheb_theo] = \
+        frequencyResponseAndZTransformCalculations.generateTheoreticalAndEmpiricalResponses(root_dicts_list)
 
     normed_abs_h_f_emp = abs_h_f_emp/np.amax(abs_h_f_emp)
     normed_abs_h_f_theo = abs_h_f_theo/np.amax(abs_h_f_theo)
