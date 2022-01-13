@@ -71,7 +71,7 @@ class chebyshevSpectrumCalculations:
         return abs_h_f_cheb_theo
 
 
-class fundamentalFrequencyResponseEquations:
+class fundamentalFrequencyResponseAndZTransformEquations:
     
     @staticmethod
     def get_z_domain_complex_conjugate_root_pair_math_functions():
@@ -208,7 +208,7 @@ class frequencyResponseAndZTransformCalculations:
             [abs_rho_func,
              z_transform_coeffs_func,
              _, _] = \
-                fundamentalFrequencyResponseEquations.get_z_domain_single_real_root_math_functions()
+                fundamentalFrequencyResponseAndZTransformEquations.get_z_domain_single_real_root_math_functions()
 
             # Calculate the z-transform coefficients based on the math functions which were just retrieved
             z_coefs = z_transform_coeffs_func(abs_rho_func(gamma, abs_rho_power), rho_sign)
@@ -224,7 +224,7 @@ class frequencyResponseAndZTransformCalculations:
             # Get the appropriate math functions
             [eta_func, gamma_func, abs_rho_func, 
              z_transform_coeffs_func, _, _, _, _] = \
-                fundamentalFrequencyResponseEquations.get_z_domain_complex_conjugate_root_pair_math_functions()
+                fundamentalFrequencyResponseAndZTransformEquations.get_z_domain_complex_conjugate_root_pair_math_functions()
         
             # Calculate the z-transform coefficients based on the math functions which were just retrieved
             gamma = gamma_func(eta_func(gamma_real, abs_gamma_imag), gamma_real)
@@ -263,7 +263,7 @@ class frequencyResponseAndZTransformCalculations:
             [abs_rho_func, _,
              magnitude_response_func,
              phase_degree_response_func] = \
-                fundamentalFrequencyResponseEquations.get_z_domain_single_real_root_math_functions()
+                fundamentalFrequencyResponseAndZTransformEquations.get_z_domain_single_real_root_math_functions()
         
             # Calculate the quantity which define the frequency response for both magnitude and phase
             abs_rho = abs_rho_func(gamma, abs_rho_power)
@@ -285,7 +285,7 @@ class frequencyResponseAndZTransformCalculations:
              _, magnitude_response_func, 
              arctan_num_func, arctan_den_func, 
              phase_degree_response_func] = \
-                fundamentalFrequencyResponseEquations.get_z_domain_complex_conjugate_root_pair_math_functions()
+                fundamentalFrequencyResponseAndZTransformEquations.get_z_domain_complex_conjugate_root_pair_math_functions()
 
             # Calculate the quantities which define the frequency response for both magnitude
             # and phase
