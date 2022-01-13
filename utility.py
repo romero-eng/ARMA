@@ -402,7 +402,7 @@ class frequencyResponseAndZTransformCalculations:
         plt.show()
 
 
-def convertRootsArrayToMovingAverageZDomainRootsOutsideOfUnitCircle(roots):
+def convertRootsArrayToRootsDictList(withinUnitCircle, MA_or_AR, roots):
 
     real_roots = np.real(roots[np.imag(roots) == 0])
 
@@ -411,9 +411,9 @@ def convertRootsArrayToMovingAverageZDomainRootsOutsideOfUnitCircle(roots):
 
     root_dicts_list = []
     for root in real_roots:
-        root_dicts_list.append({'z-domain root magnitude within unit circle' :  False, 'moving-average or auto-regressive' : 'MA', 'magnitude-domain root' : root})
+        root_dicts_list.append({'z-domain root magnitude within unit circle' : withinUnitCircle, 'moving-average or auto-regressive' : MA_or_AR, 'magnitude-domain root' : root})
     for root in complex_roots:
-        root_dicts_list.append({'z-domain root magnitude within unit circle' :  False, 'moving-average or auto-regressive' : 'MA', 'magnitude-domain root' : root})
+        root_dicts_list.append({'z-domain root magnitude within unit circle' : withinUnitCircle, 'moving-average or auto-regressive' : MA_or_AR, 'magnitude-domain root' : root})
     
     return root_dicts_list
 
@@ -428,7 +428,7 @@ if(__name__=='__main__'):
     #     {'z-domain root magnitude within unit circle' :   True, 'moving-average or auto-regressive' : 'AR', 'magnitude-domain root' :  3.1       },
     #     {'z-domain root magnitude within unit circle' :   True, 'moving-average or auto-regressive' : 'AR', 'magnitude-domain root' :  0.4 - 9.2j}]
 
-    root_dicts_list = convertRootsArrayToMovingAverageZDomainRootsOutsideOfUnitCircle(np.array([-1.1, 1.1 - 1.9j, 1.4, 4.5 - 0.4j]))
+    root_dicts_list = convertRootsArrayToRootsDictList(False, 'MA', np.array([-1.1, 1.1 - 1.9j, 1.4, 4.5 - 0.4j]))
 
     [omega, 
      abs_h_f_emp, angle_deg_h_f_emp, 
@@ -436,8 +436,9 @@ if(__name__=='__main__'):
      abs_h_f_cheb_theo] = \
         frequencyResponseAndZTransformCalculations.generateTheoreticalAndEmpiricalResponses(root_dicts_list)
 
-    normed_abs_h_f_emp = abs_h_f_emp/np.amax(abs_h_f_emp)
-    normed_abs_h_f_theo = abs_h_f_theo/np.amax(abs_h_f_theo)
-    normed_abs_h_f_cheb_theo = abs_h_f_cheb_theo/np.amax(abs_h_f_cheb_theo)
-
-    frequencyResponseAndZTransformCalculations.generateSpectralPlots(omega, normed_abs_h_f_emp, angle_deg_h_f_emp, normed_abs_h_f_theo, angle_deg_h_f_theo, normed_abs_h_f_cheb_theo)
+    frequencyResponseAndZTransformCalculations.generateSpectralPlots(omega,
+                                                                     abs_h_f_emp/np.amax(abs_h_f_emp), 
+                                                                     angle_deg_h_f_emp, 
+                                                                     abs_h_f_theo/np.amax(abs_h_f_theo), 
+                                                                     angle_deg_h_f_theo, 
+                                                                     abs_h_f_cheb_theo/np.amax(abs_h_f_cheb_theo))
