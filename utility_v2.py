@@ -239,6 +239,7 @@ def freqz(omega, root_dict):
 
 def calculatePartialChebyshevPowerSpectrum(omega, MA_or_AR_root_dicts_list):
 
+    # Temporarily separate the real roots from the complex roots
     real_roots = []
     complex_roots = []
     for root_dict in MA_or_AR_root_dicts_list:
@@ -247,22 +248,30 @@ def calculatePartialChebyshevPowerSpectrum(omega, MA_or_AR_root_dicts_list):
         else:
             real_roots.append(root_dict['magnitude-domain root'])
 
+    # Combine all the real roots, complex roots, and complex conjugate roots back 
+    # into one big array
     real_roots = np.array(real_roots)
     complex_roots = np.array(complex_roots)
     complex_roots = np.hstack((complex_roots, np.conjugate(complex_roots)))
     roots = np.hstack((real_roots, complex_roots))
 
+    # Get the corresponding cosine polynomial coefficients, and then get the equivalent
+    # Chebyshev series coefficients
     cheb_poly_coefs = np.real(np.polynomial.polynomial.polyfromroots(roots))
     cheb_series_coefs = np.polynomial.chebyshev.poly2cheb(cheb_poly_coefs)
     
+    # Calculate the squared frequency magnitude response from the Chebyshev series coefficients
     squared_abs_h_f_cheb_theo = np.zeros(omega.shape)
     for n in np.arange(0, len(cheb_series_coefs), 1):
         squared_abs_h_f_cheb_theo = squared_abs_h_f_cheb_theo + cheb_series_coefs[n]*np.cos(n*omega)
     
+    # If there is an odd number of positive real roots, then that means that the squared magnitude
+    # frequency response needs to be multiplied by -1
     odd_number_of_negatives_flag = np.sum(np.sign(real_roots) == 1) % 2  == 1
     if(odd_number_of_negatives_flag):
         squared_abs_h_f_cheb_theo = -1*squared_abs_h_f_cheb_theo
     
+    # Take the square root of the squared frequency magnitude response
     abs_h_f_cheb_theo = np.sqrt(squared_abs_h_f_cheb_theo)
     
     return abs_h_f_cheb_theo
@@ -270,6 +279,8 @@ def calculatePartialChebyshevPowerSpectrum(omega, MA_or_AR_root_dicts_list):
 
 def calculateEntireChebyshevPowerSpectrum(omega, root_dicts_list):
 
+    # Separate the auto-regressive roots (i.e., the poles) from the
+    # moving-average roots (i.e., the zeros)
     AR_root_dicts_list = []
     MA_root_dicts_list = []
     for root_dict in root_dicts_list:
@@ -280,6 +291,9 @@ def calculateEntireChebyshevPowerSpectrum(omega, root_dicts_list):
         else:
             raise ValueError('Unexpected value for MA/AR description for the following root: ' + str(root_dict))
 
+    # Calculate the moving-average and auto-regressive frequency spectrums separately, and then
+    # divide the moving-average spectrum by the auto-regressive spectrum to get the combined total
+    # Chebyshev spectrum
     AR_abs_h_f_cheb_theo = calculatePartialChebyshevPowerSpectrum(omega, AR_root_dicts_list)
     MA_abs_h_f_cheb_theo = calculatePartialChebyshevPowerSpectrum(omega, MA_root_dicts_list)
     abs_h_f_cheb_theo = MA_abs_h_f_cheb_theo/AR_abs_h_f_cheb_theo
@@ -289,6 +303,8 @@ def calculateEntireChebyshevPowerSpectrum(omega, root_dicts_list):
 
 def generateTheoreticalAndEmpiricalResponses(root_dicts_list):
 
+    # Separately calculate the corresponding z-transform coefficients of the 
+    # auto-regressive and moving-average roots, respectively
     MA_z_coefs = np.array([1])
     AR_z_coefs = np.array([1])
     for root_dict in root_dicts_list:
@@ -296,10 +312,14 @@ def generateTheoreticalAndEmpiricalResponses(root_dicts_list):
         MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
         AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
 
+    # Empirically calculate the frequency magnitude response, the frequency phase
+    # response, and the frequency axis itself
     [omega, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs)
     abs_h_f_emp = np.abs(h_f_emp)
     angle_deg_h_f_emp = np.rad2deg(np.angle(h_f_emp))
 
+    # Calculate the theoretical frequency magnitude and phase responses based on the
+    # individual theoretical responses of each of the roots
     abs_h_f_theo = np.ones(abs_h_f_emp.shape)
     angle_deg_h_f_theo = np.zeros(angle_deg_h_f_emp.shape)
     for root_dict in root_dicts_list:
@@ -308,6 +328,7 @@ def generateTheoreticalAndEmpiricalResponses(root_dicts_list):
         angle_deg_h_f_theo = angle_deg_h_f_theo + tmp_angle_deg_h_f_theo
     angle_deg_h_f_theo = np.rad2deg(np.arctan2(np.sin(np.deg2rad(angle_deg_h_f_theo)), np.cos(np.deg2rad(angle_deg_h_f_theo)))) # this is done to wrap the phase response
 
+    # Calculate the theoretical Chebyshev spectrum
     abs_h_f_cheb_theo = calculateEntireChebyshevPowerSpectrum(omega, root_dicts_list)
     
     return [omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo]
