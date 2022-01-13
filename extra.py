@@ -41,22 +41,6 @@ def calculateChebyshevPolynomialCoefficients(t, t_delta, f_t, N):
     return [scale, cheb_poly_roots]
 
 
-def convertFrequencyMagnitudeRootsToZTransformCoefficients():
-    
-    z_transform_coeffs = np.array([1])
-
-    for idx in np.arange(0, num_complex_roots, 1):
-        z_transform_coeffs = np.convolve(z_transform_coeffs, complexConjugateRootPairZTransformCoefficients(complex_roots[idx]))
-
-    for idx in np.arange(0, num_real_negative_roots, 1):
-        z_transform_coeffs = np.convolve(z_transform_coeffs, realNegativeRootZTransformCoefficents(negative_real_roots[idx]))
-
-    for idx in np.arange(0, num_real_positive_roots, 1):
-        z_transform_coeffs = np.convolve(z_transform_coeffs, realPositiveRootZTransformCoefficents(positive_real_roots[idx]))
-    
-    return z_transform_coeffs
-
-
 def showPlots(f, f_c, f_c_1, f_c_2, abs_h_f):
 
   plt.figure()
