@@ -4,13 +4,77 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 
-class zDomainComplexConjugateRootPair:
+class chebyshevSpectrumCalculations:
 
     @staticmethod
-    def get_math_functions():
+    def calculatePartialChebyshevPowerSpectrum(omega, MA_or_AR_root_dicts_list):
 
-        # lambda for converting boolean flag (decides whether z-domain roots are inside or outside unit circle) into corresponding exponent
-        convert_boolean_to_abs_rho_power_func = lambda z_domain_root_within_unit_circle : 1 - 2*z_domain_root_within_unit_circle
+        # Temporarily separate the real roots from the complex roots
+        real_roots = []
+        complex_roots = []
+        for root_dict in MA_or_AR_root_dicts_list:
+            if(isinstance(root_dict['magnitude-domain root'], complex)):
+                complex_roots.append(root_dict['magnitude-domain root'])
+            else:
+                real_roots.append(root_dict['magnitude-domain root'])
+
+        # Combine all the real roots, complex roots, and complex conjugate roots back 
+        # into one big array
+        real_roots = np.array(real_roots)
+        complex_roots = np.array(complex_roots)
+        complex_roots = np.hstack((complex_roots, np.conjugate(complex_roots)))
+        roots = np.hstack((real_roots, complex_roots))
+
+        # Get the corresponding cosine polynomial coefficients, and then get the equivalent
+        # Chebyshev series coefficients
+        cheb_poly_coefs = np.real(np.polynomial.polynomial.polyfromroots(roots))
+        cheb_series_coefs = np.polynomial.chebyshev.poly2cheb(cheb_poly_coefs)
+    
+        # Calculate the squared frequency magnitude response from the Chebyshev series coefficients
+        squared_abs_h_f_cheb_theo = np.zeros(omega.shape)
+        for n in np.arange(0, len(cheb_series_coefs), 1):
+            squared_abs_h_f_cheb_theo = squared_abs_h_f_cheb_theo + cheb_series_coefs[n]*np.cos(n*omega)
+    
+        # If there is an odd number of positive real roots, then that means that the squared magnitude
+        # frequency response needs to be multiplied by -1
+        odd_number_of_negatives_flag = np.sum(np.sign(real_roots) == 1) % 2  == 1
+        if(odd_number_of_negatives_flag):
+            squared_abs_h_f_cheb_theo = -1*squared_abs_h_f_cheb_theo
+    
+        # Take the square root of the squared frequency magnitude response
+        abs_h_f_cheb_theo = np.sqrt(squared_abs_h_f_cheb_theo)
+    
+        return abs_h_f_cheb_theo
+
+    @staticmethod
+    def calculateEntireChebyshevPowerSpectrum(omega, root_dicts_list):  
+
+        # Separate the auto-regressive roots (i.e., the poles) from the
+        # moving-average roots (i.e., the zeros)
+        AR_root_dicts_list = []
+        MA_root_dicts_list = []
+        for root_dict in root_dicts_list:
+            if(root_dict['moving-average or auto-regressive'] == 'MA'):
+                MA_root_dicts_list.append(root_dict)
+            elif(root_dict['moving-average or auto-regressive'] == 'AR'):
+                AR_root_dicts_list.append(root_dict)
+            else:
+                raise ValueError('Unexpected value for MA/AR description for the following root: ' + str(root_dict))
+
+        # Calculate the moving-average and auto-regressive frequency spectrums separately, and then
+        # divide the moving-average spectrum by the auto-regressive spectrum to get the combined total
+        # Chebyshev spectrum
+        AR_abs_h_f_cheb_theo = chebyshevSpectrumCalculations.calculatePartialChebyshevPowerSpectrum(omega, AR_root_dicts_list)
+        MA_abs_h_f_cheb_theo = chebyshevSpectrumCalculations.calculatePartialChebyshevPowerSpectrum(omega, MA_root_dicts_list)
+        abs_h_f_cheb_theo = MA_abs_h_f_cheb_theo/AR_abs_h_f_cheb_theo
+
+        return abs_h_f_cheb_theo
+
+
+class fundamentalFrequencyResponseEquations:
+    
+    @staticmethod
+    def get_z_domain_complex_conjugate_root_pair_math_functions():
 
         # Basic math equations for mapping a complex conjugate root pair from the squared frequency magnitude cosine 
         # polynomial to the magnitudes of the corresponding complex conjugate root pair within the z-transform
@@ -30,89 +94,14 @@ class zDomainComplexConjugateRootPair:
         arctan_den_func            = lambda omega, gamma, gamma_real, abs_rho : 2*np.square(np.cos(omega) + (gamma_real/(2*abs_rho*gamma))) - 2*np.square(gamma_real/(2*abs_rho*gamma)) + np.square(1/abs_rho) - 1
         phase_degree_response_func = lambda arctan_num, arctan_den : -np.rad2deg(np.arctan2(arctan_num, arctan_den))
 
-        return [convert_boolean_to_abs_rho_power_func,
-                eta_func, gamma_func, abs_rho_func, 
+        return [eta_func, gamma_func, abs_rho_func, 
                 z_transform_coeffs_func, 
                 magnitude_response_func, 
                 arctan_num_func, arctan_den_func, 
                 phase_degree_response_func]
 
     @staticmethod
-    def interpret_squared_frequency_magnitude_cosine_polynomial_root(square_freq_mag_cos_poly_root):
-
-        square_freq_mag_cos_poly_root = -1*square_freq_mag_cos_poly_root
-
-        gamma_real     = np.real(square_freq_mag_cos_poly_root)
-        abs_gamma_imag = np.imag(square_freq_mag_cos_poly_root)
-
-        if(abs_gamma_imag <= 0):
-            raise ValueError('The given complex root of a squared frequency magnitude cosine polynomial must have a negative imaginary component.')
-
-        return [gamma_real, abs_gamma_imag]
-
-    @staticmethod
-    def z_trans_coefs(square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR):
-
-        [convert_boolean_to_abs_rho_power_func,
-         eta_func, gamma_func, abs_rho_func, 
-         z_transform_coeffs_func, _, _, _, _] = \
-            zDomainComplexConjugateRootPair.get_math_functions()
-
-        [MA_flag, AR_flag] = zDomainRoot.MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle)
-
-        [gamma_real, abs_gamma_imag] = zDomainComplexConjugateRootPair.interpret_squared_frequency_magnitude_cosine_polynomial_root(square_freq_mag_cos_poly_root)
-
-        abs_rho_power = convert_boolean_to_abs_rho_power_func(z_domain_root_within_unit_circle)
-        gamma = gamma_func(eta_func(gamma_real, abs_gamma_imag), gamma_real)
-        z_coefs = z_transform_coeffs_func(gamma_real, gamma, abs_rho_func(gamma, abs_rho_power))
-
-        if(AR_flag):
-            MA_z_coefs = np.array([1])
-            AR_z_coefs = z_coefs
-        elif(MA_flag):
-            MA_z_coefs = z_coefs
-            AR_z_coefs = np.array([1])
-
-        return [MA_z_coefs, AR_z_coefs]
-
-    @staticmethod
-    def freqz(omega, square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR):
-
-        [convert_boolean_to_abs_rho_power_func,
-         eta_func, gamma_func, abs_rho_func, 
-         _, magnitude_response_func, 
-         arctan_num_func, arctan_den_func, 
-         phase_degree_response_func] = \
-            zDomainComplexConjugateRootPair.get_math_functions()
-
-        [_, AR_flag] = zDomainRoot.MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle)
-
-        [gamma_real, abs_gamma_imag] = zDomainComplexConjugateRootPair.interpret_squared_frequency_magnitude_cosine_polynomial_root(square_freq_mag_cos_poly_root)
-
-        abs_rho_power = convert_boolean_to_abs_rho_power_func(z_domain_root_within_unit_circle)
-        gamma = gamma_func(eta_func(gamma_real, abs_gamma_imag), gamma_real)
-        abs_rho = abs_rho_func(gamma, abs_rho_power)
-
-        arctan_num = arctan_num_func(omega, gamma, gamma_real, abs_rho)
-        arctan_den = arctan_den_func(omega, gamma, gamma_real, abs_rho)
-
-        abs_h_f = magnitude_response_func(omega, gamma_real, abs_gamma_imag, abs_rho)
-        angle_deg_h_f = phase_degree_response_func(arctan_num, arctan_den)
-
-        if(AR_flag):
-            abs_h_f = 1/abs_h_f
-            angle_deg_h_f = -angle_deg_h_f
-
-        return [abs_h_f, angle_deg_h_f]
-
-
-class zDomainSingleRealRoot:
-
-    @staticmethod
-    def get_math_functions():
-
-        # lambda for converting boolean flag (decides whether z-domain roots are inside or outside unit circle) into corresponding exponent
-        convert_boolean_to_abs_rho_power_func = lambda z_domain_root_within_unit_circle : 1 - 2*z_domain_root_within_unit_circle
+    def get_z_domain_single_real_root_math_functions():
 
         # Basic math equation for mapping a single root from the squared frequency magnitude cosine 
         # polynomial to the magnitudes of the corresponding single real root within the z-transform
@@ -124,279 +113,313 @@ class zDomainSingleRealRoot:
 
         # Frequency magnitude response for the corresponding discrete fourier transform of a z-transform with only 
         # one specified single real root
-        magnitude_response_func = lambda omega, gamma, abs_rho, rho_sign : np.sqrt(2*abs_rho*(gamma + rho_sign*np.cos(omega)))
+        magnitude_response_func = lambda omega, gamma, abs_rho, rho_sign : np.sqrt(rho_sign*2*abs_rho*(np.cos(omega) + rho_sign*gamma))
 
         # Frequency phase response (in degrees) for the corresponding discrete fourier transform of a z-transform with only one specified pair of complex conjugate roots
         phase_degree_response_func = lambda omega, abs_rho, rho_sign : -rho_sign*np.rad2deg(np.arctan2(np.sin(omega), (1/abs_rho) + rho_sign*np.cos(omega)))
 
-        return [convert_boolean_to_abs_rho_power_func,
-                abs_rho_func,
+        return [abs_rho_func,
                 z_transform_coeffs_func,
                 magnitude_response_func,
                 phase_degree_response_func]
 
-    @staticmethod
-    def interpret_squared_frequency_magnitude_cosine_polynomial_root(square_freq_mag_cos_poly_root):
 
-        rho_sign = -1*np.sign(square_freq_mag_cos_poly_root)
-        gamma = np.abs(square_freq_mag_cos_poly_root)
-
-        if(gamma <= 1):
-            raise ValueError('The given single real root must have an absolute value greater than one.')
-
-        return [gamma, rho_sign]
+class frequencyResponseAndZTransformCalculations:
 
     @staticmethod
-    def z_trans_coefs(square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR):
+    def interpretRoot(root_dict):
 
-        [convert_boolean_to_abs_rho_power_func,
-         abs_rho_func,
-         z_transform_coeffs_func,
-         _, _] = \
-            zDomainSingleRealRoot.get_math_functions()
+        # Obtain the information about whether or not the z-domain root lies inside of the unit circle, 
+        # and then initialize the corresponding exponent accordingly
+        z_domain_root_within_unit_circle = root_dict['z-domain root magnitude within unit circle']
+        abs_rho_power = 1 - 2*z_domain_root_within_unit_circle
 
-        [MA_flag, AR_flag] = zDomainRoot.MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle)
+        # Obtain the information about whether the z-domain root is moving-average (FIR) or
+        # auto-regressive (IIR)
+        MA_flag = root_dict['moving-average or auto-regressive'] == 'MA'
+        AR_flag = root_dict['moving-average or auto-regressive'] == 'AR'
 
-        [gamma, rho_sign] = zDomainSingleRealRoot.interpret_squared_frequency_magnitude_cosine_polynomial_root(square_freq_mag_cos_poly_root)
+        # If the the root is not either moving-average or auto-regressive, then an error
+        # occurred somewhere
+        if((not MA_flag) and (not AR_flag)):
+            raise ValueError("The 'MA_or_AR' variable must either be 'MA' or 'AR'")
+    
+        # If an autoregressive z-domain root does not lie within the unit circle, then the resulting difference equation coefficients will lead to
+        # an unstable time-domain response which cannot be allowed
+        if(AR_flag and (not z_domain_root_within_unit_circle)):
+            raise ValueError("Cannot have autoregressive (IIR) coefficients while the magnitude of the roots of the corresponding z-transform are outside the unit circle")
+
+        # Get the root from the magnitude-domain (i.e., the plane where the roots of the squared magnitude frequency cosine polynomial lie),
+        # and then convert it to the corresponding addend (which is more compatible with the upcoming equations) 
+        magnitude_domain_root = root_dict['magnitude-domain root']
+        magnitude_domain_addend = -1*magnitude_domain_root
+
+        # If the magnitude-domain addend is complex,...
+        if(isinstance(magnitude_domain_addend, complex)):
+
+            # Get the real and imaginary components
+            gamma_real     = np.real(magnitude_domain_addend)
+            abs_gamma_imag = np.imag(magnitude_domain_addend)
+
+            # If the imaginary component is negative, the upcoming equations will not make sense, so raise a ValueError
+            if(abs_gamma_imag <= 0):
+                raise ValueError('The given complex root of a squared frequency magnitude cosine polynomial must have a negative imaginary component.')
+
+            quant_1 = gamma_real
+            quant_2 = abs_gamma_imag
+
+            # Set the boolean flag to say the magnitude-domain root is complex
+            complex_flag = True
         
-        z_coefs = z_transform_coeffs_func(abs_rho_func(gamma, convert_boolean_to_abs_rho_power_func(z_domain_root_within_unit_circle)), rho_sign)
+        else:
 
+            # Get the sign and absolute value of the magnitude-domain addend
+            rho_sign = np.sign(magnitude_domain_addend)
+            gamma    =  np.abs(magnitude_domain_addend)
+
+            # If the absolute value of the magnitude-domain addend is less than one, the upcoming equations will not make
+            # sense, so raise a ValueError
+            if(gamma <= 1):
+                raise ValueError('The given single real root must have an absolute value greater than one.')
+        
+            quant_1 = rho_sign
+            quant_2 = gamma
+
+            # Set the boolean flag to say the magnitude-domain root is NOT complex
+            complex_flag = False
+
+        return [AR_flag, abs_rho_power, complex_flag, quant_1, quant_2]
+
+    @staticmethod
+    def z_trans_coefs(root_dict):
+    
+        # Figure out how to interpret the given root
+        [AR_flag, abs_rho_power, complex_flag, quant_1, quant_2] = frequencyResponseAndZTransformCalculations.interpretRoot(root_dict)
+    
+        # If the given root is not complex,...
+        if(not complex_flag):
+
+            # Reinterpret these generic quantities as describing the frequency magnitude response 
+            # of a corresponding z-transform with only one single real root
+            rho_sign = quant_1
+            gamma    = quant_2
+
+            # Get the appropriate math functions
+            [abs_rho_func,
+             z_transform_coeffs_func,
+             _, _] = \
+                fundamentalFrequencyResponseEquations.get_z_domain_single_real_root_math_functions()
+
+            # Calculate the z-transform coefficients based on the math functions which were just retrieved
+            z_coefs = z_transform_coeffs_func(abs_rho_func(gamma, abs_rho_power), rho_sign)
+    
+        # Otherwise, if the given root is complex,...
+        else:
+        
+            # Reinterpret these generic quantities as describing the frequency magnitude response 
+            # of a corresponding z-transform with only one complex conjugate root pair
+            gamma_real     = quant_1
+            abs_gamma_imag = quant_2
+
+            # Get the appropriate math functions
+            [eta_func, gamma_func, abs_rho_func, 
+             z_transform_coeffs_func, _, _, _, _] = \
+                fundamentalFrequencyResponseEquations.get_z_domain_complex_conjugate_root_pair_math_functions()
+        
+            # Calculate the z-transform coefficients based on the math functions which were just retrieved
+            gamma = gamma_func(eta_func(gamma_real, abs_gamma_imag), gamma_real)
+            z_coefs = z_transform_coeffs_func(gamma_real, gamma, abs_rho_func(gamma, abs_rho_power))
+
+        # If the given root is auto-regressive,...
         if(AR_flag):
+            # Put the calculated z-transform coefficients in the AR coefficients,
+            # and put the number "1" in the MA coefficients
             MA_z_coefs = np.array([1])
             AR_z_coefs = z_coefs
-        elif(MA_flag):
+        # Otherwise, if the given root is moving-average,...
+        else:
+            # Put the calculated z-transform coefficients in the MA coefficients,
+            # and put the number "1" in the MA coefficients
             MA_z_coefs = z_coefs
             AR_z_coefs = np.array([1])
 
         return [MA_z_coefs, AR_z_coefs]
-    
+
     @staticmethod
-    def freqz(omega, square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR):
+    def freqz(omega, root_dict):
+    
+        # Figure out how to interpret the given root
+        [AR_flag, abs_rho_power, complex_flag, quant_1, quant_2] = frequencyResponseAndZTransformCalculations.interpretRoot(root_dict)
 
-        [convert_boolean_to_abs_rho_power_func,
-         abs_rho_func, _,
-         magnitude_response_func,
-         phase_degree_response_func] = \
-            zDomainSingleRealRoot.get_math_functions()
+        # If the given root is not complex,...
+        if(not complex_flag):
 
-        [_, AR_flag] = zDomainRoot.MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle)
+            # Reinterpret these generic quantities as describing the frequency magnitude response 
+            # of a corresponding z-transform with only one single real root
+            rho_sign = quant_1
+            gamma    = quant_2
 
-        [gamma, rho_sign] = zDomainSingleRealRoot.interpret_squared_frequency_magnitude_cosine_polynomial_root(square_freq_mag_cos_poly_root)
+            # Get the appropriate math functions
+            [abs_rho_func, _,
+             magnitude_response_func,
+             phase_degree_response_func] = \
+                fundamentalFrequencyResponseEquations.get_z_domain_single_real_root_math_functions()
+        
+            # Calculate the quantity which define the frequency response for both magnitude and phase
+            abs_rho = abs_rho_func(gamma, abs_rho_power)
 
-        abs_rho = abs_rho_func(gamma, convert_boolean_to_abs_rho_power_func(z_domain_root_within_unit_circle))
+            # Calculate the frequency magnitude and phase response (degrees)
+            abs_h_f = magnitude_response_func(omega, gamma, abs_rho, rho_sign)
+            angle_deg_h_f = phase_degree_response_func(omega, abs_rho, rho_sign)
 
-        abs_h_f = magnitude_response_func(omega, gamma, abs_rho, rho_sign)
-        angle_deg_h_f = phase_degree_response_func(omega, abs_rho, rho_sign)
+        # Otherwise, if the given root is complex,...
+        else:
 
+            # Reinterpret these generic quantities as describing the frequency magnitude response 
+            # of a corresponding z-transform with only one complex conjugate root pair
+            gamma_real     = quant_1
+            abs_gamma_imag = quant_2
+
+            # Get the appropriate math functions
+            [eta_func, gamma_func, abs_rho_func, 
+             _, magnitude_response_func, 
+             arctan_num_func, arctan_den_func, 
+             phase_degree_response_func] = \
+                fundamentalFrequencyResponseEquations.get_z_domain_complex_conjugate_root_pair_math_functions()
+
+            # Calculate the quantities which define the frequency response for both magnitude
+            # and phase
+            gamma = gamma_func(eta_func(gamma_real, abs_gamma_imag), gamma_real)
+            abs_rho = abs_rho_func(gamma, abs_rho_power)
+
+            # Calculate the numerator and denominator of the value inside the arctan function
+            # which defines the frequency phase response
+            arctan_num = arctan_num_func(omega, gamma, gamma_real, abs_rho)
+            arctan_den = arctan_den_func(omega, gamma, gamma_real, abs_rho)
+
+            # Calculate the frequency magnitude and phase response (degrees)
+            abs_h_f = magnitude_response_func(omega, gamma_real, abs_gamma_imag, abs_rho)
+            angle_deg_h_f = phase_degree_response_func(arctan_num, arctan_den)
+
+        # If the given root is auto-regressive,...
         if(AR_flag):
+            # Recalculate the magnitude as the reciprocal, and the phase as the negative
             abs_h_f = 1/abs_h_f
             angle_deg_h_f = -angle_deg_h_f
 
         return [abs_h_f, angle_deg_h_f]
 
-
-class zDomainRoot():
-
     @staticmethod
-    def MA_or_AR_interpretation(MA_or_AR, z_domain_root_within_unit_circle):
+    def generateTheoreticalAndEmpiricalResponses(root_dicts_list):
 
-        MA_flag = MA_or_AR == 'MA'
-        AR_flag = MA_or_AR == 'AR'
-
-        if((not MA_flag) and (not AR_flag)):
-            raise ValueError("The 'MA_or_AR' variable must either be 'MA' or 'AR'")
-        
-        if(AR_flag and (not z_domain_root_within_unit_circle)):
-            raise ValueError("Cannot have autoregressive (IIR) coefficients while the roots of the corresponding z-transform are outside the unit circle")
-
-        return [MA_flag, AR_flag]
-    
-    @staticmethod
-    def z_trans_coefs(square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR):
-
-        if(isinstance(square_freq_mag_cos_poly_root, complex)):
-            [MA_z_coefs, AR_z_coefs] = zDomainComplexConjugateRootPair.z_trans_coefs(square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR)
-        else:
-            [MA_z_coefs, AR_z_coefs] =           zDomainSingleRealRoot.z_trans_coefs(square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR)
-    
-        return [MA_z_coefs, AR_z_coefs]
-
-    @staticmethod
-    def freqz(omega, square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR):
-
-        if(isinstance(square_freq_mag_cos_poly_root, complex)):
-            [abs_h_f_theo, angle_deg_h_f_theo] = zDomainComplexConjugateRootPair.freqz(omega, square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR)
-        else:
-            [abs_h_f_theo, angle_deg_h_f_theo] =           zDomainSingleRealRoot.freqz(omega, square_freq_mag_cos_poly_root, z_domain_root_within_unit_circle, MA_or_AR)
-    
-        return [abs_h_f_theo, angle_deg_h_f_theo]
-
-
-class magnitudeDomainRoots():
-
-    @staticmethod
-    def calculatePartialChebyshevPowerSpectrum(omega, MA_or_AR_root_tuples_list):
-
-        real_roots = []
-        complex_roots = []
-        for root_tuple in MA_or_AR_root_tuples_list:
-            if(isinstance(root_tuple[2], complex)):
-                complex_roots.append(root_tuple[2])
-            else:
-                real_roots.append(root_tuple[2])
-
-        real_roots = np.array(real_roots)
-        complex_roots = np.array(complex_roots)
-        complex_roots = np.hstack((complex_roots, np.conjugate(complex_roots)))
-        roots = np.hstack((real_roots, complex_roots))
-
-        cheb_poly_coefs = np.real(np.polynomial.polynomial.polyfromroots(roots))
-        cheb_series_coefs = np.polynomial.chebyshev.poly2cheb(cheb_poly_coefs)
-    
-        squared_abs_h_f_cheb_theo = np.zeros(omega.shape)
-        for n in np.arange(0, len(cheb_series_coefs), 1):
-            squared_abs_h_f_cheb_theo = squared_abs_h_f_cheb_theo + cheb_series_coefs[n]*np.cos(n*omega)
-    
-        if( np.sum(np.sign(real_roots) == 1) % 2  == 1 ):
-            squared_abs_h_f_cheb_theo = -1*squared_abs_h_f_cheb_theo
-
-        abs_h_f_cheb_theo = np.sqrt(squared_abs_h_f_cheb_theo)
-
-        return abs_h_f_cheb_theo
-
-    @staticmethod
-    def calculateEntireChebyshevPowerSpectrum(omega, root_tuples_list):
-
-        AR_root_tuples_list = []
-        MA_root_tuples_list = []
-        for root_tuple in root_tuples_list:
-            if(root_tuple[1] == 'MA'):
-                MA_root_tuples_list.append(root_tuple)
-            elif(root_tuple[1] == 'AR'):
-                AR_root_tuples_list.append(root_tuple)
-            else:
-                raise ValueError('Unexpected value for MA/AR description for the following root: ' + str(root_tuple))
-
-        AR_abs_h_f_cheb_theo = magnitudeDomainRoots.calculatePartialChebyshevPowerSpectrum(omega, AR_root_tuples_list)
-        MA_abs_h_f_cheb_theo = magnitudeDomainRoots.calculatePartialChebyshevPowerSpectrum(omega, MA_root_tuples_list)
-        abs_h_f_cheb_theo = MA_abs_h_f_cheb_theo/AR_abs_h_f_cheb_theo
-
-        return abs_h_f_cheb_theo
-
-    @staticmethod
-    def generateEmpiricalAndTheoreticalResponses(root_tuples_list):
-
-        num_roots = len(root_tuples_list)
-
+        # Separately calculate the corresponding z-transform coefficients of the 
+        # auto-regressive and moving-average roots, respectively
         MA_z_coefs = np.array([1])
         AR_z_coefs = np.array([1])
-        for root_idx in np.arange(0, num_roots):
-            [tmp_MA_z_coefs,
-             tmp_AR_z_coefs] = \
-                 zDomainRoot.z_trans_coefs(root_tuples_list[root_idx][2], 
-                                           root_tuples_list[root_idx][0], 
-                                           root_tuples_list[root_idx][1])
+        for root_dict in root_dicts_list:
+            [tmp_MA_z_coefs, tmp_AR_z_coefs] = frequencyResponseAndZTransformCalculations.z_trans_coefs(root_dict)
             MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
             AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
 
+        # Empirically calculate the frequency magnitude response, the frequency phase
+        # response, and the frequency axis itself
         [omega, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs)
         abs_h_f_emp = np.abs(h_f_emp)
         angle_deg_h_f_emp = np.rad2deg(np.angle(h_f_emp))
 
+        # Calculate the theoretical frequency magnitude and phase responses based on the
+        # individual theoretical responses of each of the roots
         abs_h_f_theo = np.ones(abs_h_f_emp.shape)
         angle_deg_h_f_theo = np.zeros(angle_deg_h_f_emp.shape)
-        for root_idx in np.arange(0, num_roots):
-            [tmp_abs_h_f_theo,
-             tmp_angle_deg_h_f_theo] = \
-                 zDomainRoot.freqz(omega,
-                                   root_tuples_list[root_idx][2], 
-                                   root_tuples_list[root_idx][0], 
-                                   root_tuples_list[root_idx][1])
+        for root_dict in root_dicts_list:
+            [tmp_abs_h_f_theo, tmp_angle_deg_h_f_theo] = frequencyResponseAndZTransformCalculations.freqz(omega, root_dict)
             abs_h_f_theo = tmp_abs_h_f_theo*abs_h_f_theo
             angle_deg_h_f_theo = angle_deg_h_f_theo + tmp_angle_deg_h_f_theo
         angle_deg_h_f_theo = np.rad2deg(np.arctan2(np.sin(np.deg2rad(angle_deg_h_f_theo)), np.cos(np.deg2rad(angle_deg_h_f_theo)))) # this is done to wrap the phase response
 
-        abs_h_f_cheb_theo = magnitudeDomainRoots.calculateEntireChebyshevPowerSpectrum(omega, root_tuples_list)
-
+        # Calculate the theoretical Chebyshev spectrum
+        abs_h_f_cheb_theo = chebyshevSpectrumCalculations.calculateEntireChebyshevPowerSpectrum(omega, root_dicts_list)
+    
         return [omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo]
 
+    @staticmethod
+    def generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo):
 
-def generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo):
+        usetex = matplotlib.checkdep_usetex(True)
 
-    usetex = matplotlib.checkdep_usetex(True)
-
-    f = omega/(2*np.pi)
+        f = omega/(2*np.pi)
     
-    plt.rc('text', usetex=True)
-    plt.rc('font', family='serif')
+        plt.rc('text', usetex=True)
+        plt.rc('font', family='serif')
 
-    [fig1, axs] = plt.subplots(2, 3)
+        [fig, axs] = plt.subplots(2, 3, figsize=(11, 5))
 
-    axs[0, 0].plot(f, abs_h_f_emp)
-    axs[0, 0].set_xlim([0, 0.5])
-    axs[0, 0].set_ylim(bottom=0)
-    axs[0, 0].grid()
-    axs[0, 0].set_xlabel('Frequency (Hz)')
-    if(usetex):
-        axs[0, 0].set_ylabel(r'$\big|h(f)\big|$')
-    axs[0, 0].set_title('Empirical Magnitude')
+        axs[0, 0].plot(f, abs_h_f_emp)
+        axs[0, 0].set_xlim([0, 0.5])
+        #axs[0, 0].set_ylim(bottom=0)
+        axs[0, 0].grid()
+        axs[0, 0].set_xlabel('Frequency (Hz)')
+        if(usetex):
+            axs[0, 0].set_ylabel(r'$\big|h(f)\big|$')
+        axs[0, 0].set_title('Empirical Magnitude')
     
-    axs[1, 0].plot(f, angle_deg_h_f_emp)
-    axs[1, 0].set_xlim([0, 0.5])
-    axs[1, 0].grid()
-    axs[1, 0].set_xlabel('Frequency (Hz)')
-    axs[1, 0].set_ylabel(r'${\angle}h(f)^{\circ}$')
-    axs[1, 0].set_title('Empirical Phase')
+        axs[1, 0].plot(f, angle_deg_h_f_emp)
+        axs[1, 0].set_xlim([0, 0.5])
+        axs[1, 0].grid()
+        axs[1, 0].set_xlabel('Frequency (Hz)')
+        axs[1, 0].set_ylabel(r'${\angle}h(f)^{\circ}$')
+        axs[1, 0].set_title('Empirical Phase')
+
+        axs[0, 1].plot(f, abs_h_f_theo)
+        axs[0, 1].set_xlim([0, 0.5])
+        #axs[0, 1].set_ylim(bottom=0)
+        axs[0, 1].grid()
+        axs[0, 1].set_xlabel('Frequency (Hz)')
+        if(usetex):
+            axs[0, 1].set_ylabel(r'$\big|h(f)\big|$')
+        axs[0, 1].set_title('Theoretical Magnitude')
     
-    axs[0, 1].plot(f, abs_h_f_theo)
-    axs[0, 1].set_xlim([0, 0.5])
-    axs[0, 1].set_ylim(bottom=0)
-    axs[0, 1].grid()
-    axs[0, 1].set_xlabel('Frequency (Hz)')
-    if(usetex):
-        axs[0, 1].set_ylabel(r'$\big|h(f)\big|$')
-    axs[0, 1].set_title('Theoretical Magnitude')
-    
-    axs[1, 1].plot(f, angle_deg_h_f_theo)
-    axs[1, 1].set_xlim([0, 0.5])
-    axs[1, 1].grid()
-    axs[1, 1].set_xlabel('Frequency (Hz)')
-    if(usetex):
-        axs[1, 1].set_ylabel(r'${\angle}h(f)^{\circ}$')
-    axs[1, 1].set_title('Theoretical Phase')
+        axs[1, 1].plot(f, angle_deg_h_f_theo)
+        axs[1, 1].set_xlim([0, 0.5])
+        axs[1, 1].grid()
+        axs[1, 1].set_xlabel('Frequency (Hz)')
+        if(usetex):
+            axs[1, 1].set_ylabel(r'${\angle}h(f)^{\circ}$')
+        axs[1, 1].set_title('Theoretical Phase')
 
-    axs[0, 2].plot(f, abs_h_f_cheb_theo)
-    axs[0, 2].set_xlim([0, 0.5])
-    if(not np.any(abs_h_f_cheb_theo < 0)):
-        axs[0, 2].set_ylim(bottom=0)
-    axs[0, 2].grid()
-    axs[0, 2].set_xlabel('Frequency (Hz)')
-    if(usetex):
-        axs[0, 2].set_ylabel(r'$\big|h(f)\big||$')
-    axs[0, 2].set_title('Chebyshev Magnitude')
+        axs[0, 2].plot(f, abs_h_f_cheb_theo)
+        axs[0, 2].set_xlim([0, 0.5])
+        #if(not np.any(abs_h_f_cheb_theo < 0)):
+        #    axs[0, 2].set_ylim(bottom=0)
+        axs[0, 2].grid()
+        axs[0, 2].set_xlabel('Frequency (Hz)')
+        if(usetex):
+            axs[0, 2].set_ylabel(r'$\big|h(f)\big|$')
+        axs[0, 2].set_title('Chebyshev Magnitude')
 
-    fig1.tight_layout()
+        fig.tight_layout()
 
-    plt.show()
+        plt.show()
 
 
 if(__name__=='__main__'):
 
-    root_tuples_list = \
-        [(False, 'MA',    1.1), 
-         ( True, 'MA',   -1.4), 
-         ( True, 'AR', -( 0.45 + 0.86j)), 
-         ( True, 'AR', -(-5.45 + 4.76j))]
+    root_dicts_list = \
+        [{'z-domain root magnitude within unit circle' :  False, 'moving-average or auto-regressive' : 'MA', 'magnitude-domain root' : -1.1       },
+         {'z-domain root magnitude within unit circle' :  False, 'moving-average or auto-regressive' : 'MA', 'magnitude-domain root' :  1.1 - 1.9j},
+         {'z-domain root magnitude within unit circle' :   True, 'moving-average or auto-regressive' : 'MA', 'magnitude-domain root' :  1.4       },
+         {'z-domain root magnitude within unit circle' :   True, 'moving-average or auto-regressive' : 'MA', 'magnitude-domain root' :  4.5 - 0.4j},
+         {'z-domain root magnitude within unit circle' :   True, 'moving-average or auto-regressive' : 'AR', 'magnitude-domain root' :  3.1       },
+         {'z-domain root magnitude within unit circle' :   True, 'moving-average or auto-regressive' : 'AR', 'magnitude-domain root' :  0.4 - 9.2j}]
 
-    [omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo] = magnitudeDomainRoots.generateEmpiricalAndTheoreticalResponses(root_tuples_list)
-
-    #################################################################################################################################################################################################
-    #################################################################################################################################################################################################
-    #################################################################################################################################################################################################
-
-    #generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo)
+    [omega, 
+     abs_h_f_emp, angle_deg_h_f_emp, 
+     abs_h_f_theo, angle_deg_h_f_theo, 
+     abs_h_f_cheb_theo] = \
+        frequencyResponseAndZTransformCalculations.generateTheoreticalAndEmpiricalResponses(root_dicts_list)
 
     normed_abs_h_f_emp = abs_h_f_emp/np.amax(abs_h_f_emp)
     normed_abs_h_f_theo = abs_h_f_theo/np.amax(abs_h_f_theo)
     normed_abs_h_f_cheb_theo = abs_h_f_cheb_theo/np.amax(abs_h_f_cheb_theo)
-    generateSpectralPlots(omega, normed_abs_h_f_emp, angle_deg_h_f_emp, normed_abs_h_f_theo, angle_deg_h_f_theo, normed_abs_h_f_cheb_theo)
+
+    frequencyResponseAndZTransformCalculations.generateSpectralPlots(omega, normed_abs_h_f_emp, angle_deg_h_f_emp, normed_abs_h_f_theo, angle_deg_h_f_theo, normed_abs_h_f_cheb_theo)
