@@ -347,10 +347,10 @@ class frequencyResponseAndZTransformCalculations:
 
         f = omega/(2*np.pi)
     
-        plt.rc('text', usetex=True)
+        usetex = mpl.checkdep_usetex(True)
+        if(usetex):
+            plt.rc('text', usetex=True)
         plt.rc('font', family='serif')
-
-        usetex = mpl.checkdep_usetex(mpl.rcParams)
 
         abs_h_f_emp_idxs        = np.array([0, 0])
         abs_h_f_theo_idxs       = np.array([1, 0])
@@ -362,55 +362,65 @@ class frequencyResponseAndZTransformCalculations:
         num_rows = np.amax(idxs_matrix[:, 0]) + 1
         num_cols = np.amax(idxs_matrix[:, 1]) + 1
         [fig, axs] = plt.subplots(num_rows, num_cols, figsize=(7, 7))
-
-        axs[abs_h_f_emp_idxs[0], abs_h_f_emp_idxs[1]].plot(f, abs_h_f_emp)
-        axs[abs_h_f_emp_idxs[0], abs_h_f_emp_idxs[1]].set_xlim([0, 0.5])
-        #axs[abs_h_f_emp_idxs[0], abs_h_f_emp_idxs[1]].set_ylim(bottom=0)
-        axs[abs_h_f_emp_idxs[0], abs_h_f_emp_idxs[1]].grid()
-        axs[abs_h_f_emp_idxs[0], abs_h_f_emp_idxs[1]].set_xlabel('Frequency (Hz)')
-        if(usetex):
-            axs[abs_h_f_emp_idxs[0], abs_h_f_emp_idxs[1]].set_ylabel(r'$\big|h(f)\big|$')
+        if(len(axs.shape) == 2):
+            abs_h_f_emp_axis        = axs[       abs_h_f_emp_idxs[0],        abs_h_f_emp_idxs[1]]
+            angle_deg_h_f_emp_axis  = axs[ angle_deg_h_f_emp_idxs[0],  angle_deg_h_f_emp_idxs[1]]
+            abs_h_f_theo_axis       = axs[      abs_h_f_theo_idxs[0],       abs_h_f_theo_idxs[1]]
+            angle_deg_h_f_theo_axis = axs[angle_deg_h_f_theo_idxs[0], angle_deg_h_f_theo_idxs[1]]
+            abs_h_f_cheb_theo_axis  = axs[ abs_h_f_cheb_theo_idxs[0],  abs_h_f_cheb_theo_idxs[1]]
         else:
-            axs[abs_h_f_emp_idxs[0], abs_h_f_emp_idxs[1]].set_ylabel(r'$|h(f)|$')
-        axs[abs_h_f_emp_idxs[0], abs_h_f_emp_idxs[1]].set_title('Empirical Magnitude')
+            abs_h_f_emp_axis        = axs[np.amax(       abs_h_f_emp_idxs)]
+            angle_deg_h_f_emp_axis  = axs[np.amax( angle_deg_h_f_emp_idxs)]
+            abs_h_f_theo_axis       = axs[np.amax(      abs_h_f_theo_idxs)]
+            angle_deg_h_f_theo_axis = axs[np.amax(angle_deg_h_f_theo_idxs)]
+            abs_h_f_cheb_theo_axis  = axs[np.amax( abs_h_f_cheb_theo_idxs)]
+
+        abs_h_f_emp_axis.plot(f, abs_h_f_emp)
+        abs_h_f_emp_axis.set_xlim([0, 0.5])
+        abs_h_f_emp_axis.grid()
+        abs_h_f_emp_axis.set_xlabel('Frequency (Hz)')
+        if(usetex):
+            abs_h_f_emp_axis.set_ylabel(r'$\big|h(f)\big|$')
+        else:
+            abs_h_f_emp_axis.set_ylabel(r'$|h(f)|$')
+        abs_h_f_emp_axis.set_title('Empirical Magnitude')
     
-        axs[angle_deg_h_f_emp_idxs[0], angle_deg_h_f_emp_idxs[1]].plot(f, angle_deg_h_f_emp)
-        axs[angle_deg_h_f_emp_idxs[0], angle_deg_h_f_emp_idxs[1]].set_xlim([0, 0.5])
-        axs[angle_deg_h_f_emp_idxs[0], angle_deg_h_f_emp_idxs[1]].grid()
-        axs[angle_deg_h_f_emp_idxs[0], angle_deg_h_f_emp_idxs[1]].set_xlabel('Frequency (Hz)')
-        axs[angle_deg_h_f_emp_idxs[0], angle_deg_h_f_emp_idxs[1]].set_ylabel(r'${\angle}h(f)^{\circ}$')
-        axs[angle_deg_h_f_emp_idxs[0], angle_deg_h_f_emp_idxs[1]].set_title('Empirical Phase')
+        angle_deg_h_f_emp_axis.plot(f, angle_deg_h_f_emp)
+        angle_deg_h_f_emp_axis.set_xlim([0, 0.5])
+        angle_deg_h_f_emp_axis.grid()
+        angle_deg_h_f_emp_axis.set_xlabel('Frequency (Hz)')
+        angle_deg_h_f_emp_axis.set_ylabel(r'${\angle}h(f)^{\circ}$')
+        angle_deg_h_f_emp_axis.set_title('Empirical Phase')
 
-        axs[abs_h_f_theo_idxs[0], abs_h_f_theo_idxs[1]].plot(f, abs_h_f_theo)
-        axs[abs_h_f_theo_idxs[0], abs_h_f_theo_idxs[1]].set_xlim([0, 0.5])
-        #axs[abs_h_f_theo_idxs[0], abs_h_f_theo_idxs[1]].set_ylim(bottom=0)
-        axs[abs_h_f_theo_idxs[0], abs_h_f_theo_idxs[1]].grid()
-        axs[abs_h_f_theo_idxs[0], abs_h_f_theo_idxs[1]].set_xlabel('Frequency (Hz)')
+        abs_h_f_theo_axis.plot(f, abs_h_f_theo)
+        abs_h_f_theo_axis.set_xlim([0, 0.5])
+        abs_h_f_theo_axis.grid()
+        abs_h_f_theo_axis.set_xlabel('Frequency (Hz)')
         if(usetex):
-            axs[abs_h_f_theo_idxs[0], abs_h_f_theo_idxs[1]].set_ylabel(r'$\big|h(f)\big|$')
+            abs_h_f_theo_axis.set_ylabel(r'$\big|h(f)\big|$')
         else:
-            axs[abs_h_f_theo_idxs[0], abs_h_f_theo_idxs[1]].set_ylabel(r'$|h(f)|$')
-        axs[abs_h_f_theo_idxs[0], abs_h_f_theo_idxs[1]].set_title('Theoretical Magnitude')
+            abs_h_f_theo_axis.set_ylabel(r'$|h(f)|$')
+        abs_h_f_theo_axis.set_title('Theoretical Magnitude')
     
-        axs[angle_deg_h_f_theo_idxs[0], angle_deg_h_f_theo_idxs[1]].plot(f, angle_deg_h_f_theo)
-        axs[angle_deg_h_f_theo_idxs[0], angle_deg_h_f_theo_idxs[1]].set_xlim([0, 0.5])
-        axs[angle_deg_h_f_theo_idxs[0], angle_deg_h_f_theo_idxs[1]].grid()
-        axs[angle_deg_h_f_theo_idxs[0], angle_deg_h_f_theo_idxs[1]].set_xlabel('Frequency (Hz)')
+        angle_deg_h_f_theo_axis.plot(f, angle_deg_h_f_theo)
+        angle_deg_h_f_theo_axis.set_xlim([0, 0.5])
+        angle_deg_h_f_theo_axis.grid()
+        angle_deg_h_f_theo_axis.set_xlabel('Frequency (Hz)')
         if(usetex):
-            axs[angle_deg_h_f_theo_idxs[0], angle_deg_h_f_theo_idxs[1]].set_ylabel(r'${\angle}h(f)^{\circ}$')
+            angle_deg_h_f_theo_axis.set_ylabel(r'${\angle}h(f)^{\circ}$')
         else:
-            axs[angle_deg_h_f_theo_idxs[0], angle_deg_h_f_theo_idxs[1]].set_ylabel(r'${\angle}h(f)^\circ$')
-        axs[angle_deg_h_f_theo_idxs[0], angle_deg_h_f_theo_idxs[1]].set_title('Theoretical Phase')
+            angle_deg_h_f_theo_axis.set_ylabel(r'${\angle}h(f)^\circ$')
+        angle_deg_h_f_theo_axis.set_title('Theoretical Phase')
 
-        axs[abs_h_f_cheb_theo_idxs[0], abs_h_f_cheb_theo_idxs[1]].plot(f, abs_h_f_cheb_theo)
-        axs[abs_h_f_cheb_theo_idxs[0], abs_h_f_cheb_theo_idxs[1]].set_xlim([0, 0.5])
-        axs[abs_h_f_cheb_theo_idxs[0], abs_h_f_cheb_theo_idxs[1]].grid()
-        axs[abs_h_f_cheb_theo_idxs[0], abs_h_f_cheb_theo_idxs[1]].set_xlabel('Frequency (Hz)')
+        abs_h_f_cheb_theo_axis.plot(f, abs_h_f_cheb_theo)
+        abs_h_f_cheb_theo_axis.set_xlim([0, 0.5])
+        abs_h_f_cheb_theo_axis.grid()
+        abs_h_f_cheb_theo_axis.set_xlabel('Frequency (Hz)')
         if(usetex):
-            axs[abs_h_f_cheb_theo_idxs[0], abs_h_f_cheb_theo_idxs[1]].set_ylabel(r'$\big|h(f)\big|$')
+            abs_h_f_cheb_theo_axis.set_ylabel(r'$\big|h(f)\big|$')
         else:
-            axs[abs_h_f_cheb_theo_idxs[0], abs_h_f_cheb_theo_idxs[1]].set_ylabel(r'$|h(f)|$')
-        axs[abs_h_f_cheb_theo_idxs[0], abs_h_f_cheb_theo_idxs[1]].set_title('Chebyshev Magnitude')
+            abs_h_f_cheb_theo_axis.set_ylabel(r'$|h(f)|$')
+        abs_h_f_cheb_theo_axis.set_title('Chebyshev Magnitude')
 
         fig.tight_layout()
 
