@@ -427,33 +427,33 @@ class frequencyResponseAndZTransformCalculations:
         plt.show()
 
 
-def convertRootsArrayToRootsDictList(withinUnitCircle, MA_or_AR, roots):
+class magnitudeDomainRoots:
 
-    real_roots = np.real(roots[np.imag(roots) == 0])
+    @staticmethod
+    def convertLimitedRootsArrayToRootsDictList(withinUnitCircle, MA_or_AR, roots):
 
-    complex_roots = roots[np.imag(roots) != 0]
-    complex_roots = complex_roots[np.imag(complex_roots) < 0]
+        real_roots = np.real(roots[np.imag(roots) == 0])
 
-    root_dicts_list = []
-    for root in real_roots:
-        root_dicts_list.append({'z-domain root magnitude within unit circle' : withinUnitCircle, 'moving-average or auto-regressive' : MA_or_AR, 'magnitude-domain root' : root})
-    for root in complex_roots:
-        root_dicts_list.append({'z-domain root magnitude within unit circle' : withinUnitCircle, 'moving-average or auto-regressive' : MA_or_AR, 'magnitude-domain root' : root})
+        complex_roots = roots[np.imag(roots) != 0]
+        complex_roots = complex_roots[np.imag(complex_roots) < 0]
+
+        root_dicts_list = []
+        for root in real_roots:
+            root_dicts_list.append({'z-domain root magnitude within unit circle' : withinUnitCircle, 'moving-average or auto-regressive' : MA_or_AR, 'magnitude-domain root' : root})
+        for root in complex_roots:
+            root_dicts_list.append({'z-domain root magnitude within unit circle' : withinUnitCircle, 'moving-average or auto-regressive' : MA_or_AR, 'magnitude-domain root' : root})
     
-    return root_dicts_list
+        return root_dicts_list
 
 
 if(__name__=='__main__'):
 
-    #root_dicts_list = \
-    #    [{'z-domain root magnitude within unit circle' :  False, 'moving-average or auto-regressive' : 'MA', 'magnitude-domain root' : -1.1       },
-    #     {'z-domain root magnitude within unit circle' :  False, 'moving-average or auto-regressive' : 'MA', 'magnitude-domain root' :  1.1 - 1.9j},
-    #     {'z-domain root magnitude within unit circle' :   True, 'moving-average or auto-regressive' : 'MA', 'magnitude-domain root' :  1.4       },
-    #     {'z-domain root magnitude within unit circle' :   True, 'moving-average or auto-regressive' : 'MA', 'magnitude-domain root' :  4.5 - 0.4j},
-    #     {'z-domain root magnitude within unit circle' :   True, 'moving-average or auto-regressive' : 'AR', 'magnitude-domain root' :  3.1       },
-    #     {'z-domain root magnitude within unit circle' :   True, 'moving-average or auto-regressive' : 'AR', 'magnitude-domain root' :  0.4 - 9.2j}]
+    root_dicts_list = \
+        magnitudeDomainRoots.convertLimitedRootsArrayToRootsDictList(False, 'MA', np.array([-1.1, 1.1 - 1.9j, 1.0 + 1.9j])) + \
+        magnitudeDomainRoots.convertLimitedRootsArrayToRootsDictList( True, 'MA', np.array([ 1.4, 4.5 - 0.4j, 4.5 + 0.4j])) + \
+        magnitudeDomainRoots.convertLimitedRootsArrayToRootsDictList( True, 'AR', np.array([ 3.1, 0.4 - 9.2j, 0.4 + 9.2j]))
 
-    root_dicts_list = convertRootsArrayToRootsDictList(False, 'MA', np.array([-1.1, 1.1 - 1.9j, 1.4, 4.5 - 0.4j]))
+    #root_dicts_list = convertLimitedRootsArrayToRootsDictList(False, 'MA', np.array([-1.1, 1.1 - 1.9j, 1.4, 4.5 - 0.4j]))
 
     [omega, 
      abs_h_f_emp, angle_deg_h_f_emp, 
