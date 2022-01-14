@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.signal as dsp
-import matplotlib
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 
@@ -344,13 +344,13 @@ class frequencyResponseAndZTransformCalculations:
 
     @staticmethod
     def generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo):
-
-        usetex = matplotlib.checkdep_usetex(True)
-
+        
         f = omega/(2*np.pi)
     
         plt.rc('text', usetex=True)
         plt.rc('font', family='serif')
+
+        usetex = mpl.checkdep_usetex(mpl.rcParams)
 
         [fig, axs] = plt.subplots(2, 3, figsize=(11, 5))
 
@@ -361,6 +361,8 @@ class frequencyResponseAndZTransformCalculations:
         axs[0, 0].set_xlabel('Frequency (Hz)')
         if(usetex):
             axs[0, 0].set_ylabel(r'$\big|h(f)\big|$')
+        else:
+            axs[0, 0].set_ylabel(r'$|h(f)|$')
         axs[0, 0].set_title('Empirical Magnitude')
     
         axs[1, 0].plot(f, angle_deg_h_f_emp)
@@ -377,6 +379,8 @@ class frequencyResponseAndZTransformCalculations:
         axs[0, 1].set_xlabel('Frequency (Hz)')
         if(usetex):
             axs[0, 1].set_ylabel(r'$\big|h(f)\big|$')
+        else:
+            axs[0, 1].set_ylabel(r'$|h(f)|$')
         axs[0, 1].set_title('Theoretical Magnitude')
     
         axs[1, 1].plot(f, angle_deg_h_f_theo)
@@ -385,6 +389,8 @@ class frequencyResponseAndZTransformCalculations:
         axs[1, 1].set_xlabel('Frequency (Hz)')
         if(usetex):
             axs[1, 1].set_ylabel(r'${\angle}h(f)^{\circ}$')
+        else:
+            axs[1, 1].set_ylabel(r'${\angle}h(f)^\circ$')
         axs[1, 1].set_title('Theoretical Phase')
 
         axs[0, 2].plot(f, abs_h_f_cheb_theo)
@@ -395,6 +401,8 @@ class frequencyResponseAndZTransformCalculations:
         axs[0, 2].set_xlabel('Frequency (Hz)')
         if(usetex):
             axs[0, 2].set_ylabel(r'$\big|h(f)\big|$')
+        else:
+            axs[0, 2].set_ylabel(r'$|h(f)|$')
         axs[0, 2].set_title('Chebyshev Magnitude')
 
         fig.tight_layout()
