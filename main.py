@@ -91,6 +91,7 @@ def showPlots(f, f_c, f_c_1, f_c_2, abs_h_f, exponent_normed_squared_abs_h_f, ap
 
     abs_h_f_axis.plot(f, abs_h_f)
     abs_h_f_axis.set_xlim([0, 0.5])
+    abs_h_f_axis.set_ylim(bottom=-0.1)
     abs_h_f_axis.axvline(f_c_1, color='r')
     abs_h_f_axis.axvline(f_c, color='k')
     abs_h_f_axis.axvline(f_c_2, color='r')
@@ -111,6 +112,7 @@ def showPlots(f, f_c, f_c_1, f_c_2, abs_h_f, exponent_normed_squared_abs_h_f, ap
 
     exponent_normed_squared_abs_h_f_axis.plot(f, exponent_normed_squared_abs_h_f)
     exponent_normed_squared_abs_h_f_axis.set_xlim([0, 0.5])
+    exponent_normed_squared_abs_h_f_axis.set_ylim(bottom=-0.1)
     exponent_normed_squared_abs_h_f_axis.axvline(f_c_1, color='r')
     exponent_normed_squared_abs_h_f_axis.axvline(f_c, color='k')
     exponent_normed_squared_abs_h_f_axis.axvline(f_c_2, color='r')
@@ -131,6 +133,7 @@ def showPlots(f, f_c, f_c_1, f_c_2, abs_h_f, exponent_normed_squared_abs_h_f, ap
 
     approximated_exponent_normed_squared_abs_h_f_axis.plot(f, approximated_exponent_normed_squared_abs_h_f)
     approximated_exponent_normed_squared_abs_h_f_axis.set_xlim([0, 0.5])
+    approximated_exponent_normed_squared_abs_h_f_axis.set_ylim(bottom=-0.1)
     approximated_exponent_normed_squared_abs_h_f_axis.axvline(f_c_1, color='r')
     approximated_exponent_normed_squared_abs_h_f_axis.axvline(f_c, color='k')
     approximated_exponent_normed_squared_abs_h_f_axis.axvline(f_c_2, color='r')
@@ -151,6 +154,7 @@ def showPlots(f, f_c, f_c_1, f_c_2, abs_h_f, exponent_normed_squared_abs_h_f, ap
 
     approximated_abs_h_f_axis.plot(f, approximated_abs_h_f)
     approximated_abs_h_f_axis.set_xlim([0, 0.5])
+    approximated_abs_h_f_axis.set_ylim(bottom=-0.1)
     approximated_abs_h_f_axis.axvline(f_c_1, color='r')
     approximated_abs_h_f_axis.axvline(f_c, color='k')
     approximated_abs_h_f_axis.axvline(f_c_2, color='r')
