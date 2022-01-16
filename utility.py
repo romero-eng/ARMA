@@ -70,6 +70,26 @@ class chebyshevSpectrumCalculations:
 
         return abs_h_f_cheb_theo
 
+    @staticmethod
+    def calculateChebyshevSpectrumPolynomialRoots(f, delta_f, sq_abs_h_f, N):
+
+        # Approximate the Chebyshev series coefficents
+        cheb_series = np.zeros(N)
+        cheb_series[0] = 2*np.sum(sq_abs_h_f)*delta_f
+        for n in np.arange(1, N, 1):
+            cheb_series[n] = 4*np.sum(sq_abs_h_f*np.cos(2*np.pi*n*f))*delta_f
+
+        # Convert the approximated Chebyshev series into the corresponding Chebyshev Polynomial
+        cheb_poly = np.polynomial.chebyshev.cheb2poly(cheb_series)
+
+        # Normalize the coefficients of the chebyshev polynomial
+        cheb_poly = cheb_poly/cheb_poly[0]
+
+        # Get the roots of the Chebyshev polynomial roots
+        cheb_poly_roots = np.polynomial.polynomial.polyroots(cheb_poly)
+
+        return cheb_poly_roots
+
 
 class fundamentalFrequencyResponseAndZTransformEquations:
     
@@ -432,11 +452,16 @@ class magnitudeDomainRoots:
     @staticmethod
     def convertLimitedRootsArrayToRootsDictList(withinUnitCircle, MA_or_AR, roots):
 
+        # Get all the real roots
         real_roots = np.real(roots[np.imag(roots) == 0])
 
+        # Get all of the complex roots, and then get the roots with only 
+        # negative imaginary components
         complex_roots = roots[np.imag(roots) != 0]
         complex_roots = complex_roots[np.imag(complex_roots) < 0]
 
+        # Convert the real roots and remaining complex roots into a list of dictionaries, each
+        # of which describes an individual root
         root_dicts_list = []
         for root in real_roots:
             root_dicts_list.append({'z-domain root magnitude within unit circle' : withinUnitCircle, 'moving-average or auto-regressive' : MA_or_AR, 'magnitude-domain root' : root})
