@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import utility
 
 
-def calculate_frequency_magnitude_response(f, f_c, f_delta, f_delta_stop_perc, abs_h_f_c_stop_dB):
-  
-    f_c_2 = f_c + f_delta_stop_perc*f_delta
-    f_c_1 = f_c_2 - f_delta
+def calculate_frequency_magnitude_response(f_c, delta_f, f_delta_stop_perc, abs_h_f_c_stop_dB):
+    
+    f_c_2 = f_c + f_delta_stop_perc*delta_f
+    f_c_1 = f_c_2 - delta_f
 
     abs_h_f_c_2 = 10**(abs_h_f_c_stop_dB/10)
     abs_h_f_c_1 = 1 - abs_h_f_c_2
@@ -14,10 +14,59 @@ def calculate_frequency_magnitude_response(f, f_c, f_delta, f_delta_stop_perc, a
     sigma = (f_c_2 - f_c_1)/np.log((abs_h_f_c_1/abs_h_f_c_2)*((1 - abs_h_f_c_2)/(1 - abs_h_f_c_1)))
     mu = f_c_1  - sigma*np.log((1 - abs_h_f_c_1)/abs_h_f_c_1)
   
+    f = np.arange(0, 0.5 + f_step, f_step)
     z_score_f = (f - mu)/sigma
     abs_h_f = 1/(1 + np.exp(z_score_f))
 
-    return [f_c_1, f_c_2, f_c, abs_h_f]
+    abs_h_f_dB = 10*np.log10(abs_h_f)
+
+    return [f_c_1, f_c_2, f_c, f, abs_h_f, abs_h_f_dB]
+
+
+def showPlotsV2(f_c, f_c_1, f_c_2, f, abs_h_f, abs_h_f_dB):
+
+    abs_h_f_idxs    = np.array([0, 0])
+    abs_h_f_dB_idxs = np.array([0, 1])
+
+    idxs_matrix = \
+        np.vstack((abs_h_f_idxs,
+                   abs_h_f_dB_idxs))
+    
+    num_rows = np.amax(idxs_matrix[:, 0]) + 1
+    num_cols = np.amax(idxs_matrix[:, 1]) + 1
+    [fig, axs] = plt.subplots(num_rows, num_cols)
+
+    if(len(axs.shape) == 2):
+        abs_h_f_axis    = axs[   abs_h_f_idxs[0],    abs_h_f_idxs[1]]
+        abs_h_f_dB_axis = axs[abs_h_f_dB_idxs[0], abs_h_f_dB_idxs[1]]
+    else:
+        abs_h_f_axis    = axs[np.amax(   abs_h_f_idxs)]
+        abs_h_f_dB_axis = axs[np.amax(abs_h_f_dB_idxs)]
+    
+    abs_h_f_axis.plot(f, abs_h_f)
+    abs_h_f_axis.set_xlim([0, 0.5])
+    abs_h_f_axis.set_ylim([-0.1, 1.1])
+    abs_h_f_axis.axvline(f_c_1, color='r')
+    abs_h_f_axis.axvline(f_c, color='k')
+    abs_h_f_axis.axvline(f_c_2, color='r')
+    abs_h_f_axis.grid()
+    abs_h_f_axis.set_xlabel('Frequency (Hz)')
+    abs_h_f_axis.set_ylabel(r'$|h_(f)|$')
+    abs_h_f_axis.set_title('Target Frequency Magnitude Response')
+
+    abs_h_f_dB_axis.plot(f, abs_h_f_dB)
+    abs_h_f_dB_axis.set_xlim([0, 0.5])
+    abs_h_f_dB_axis.axvline(f_c_1, color='r')
+    abs_h_f_dB_axis.axvline(f_c, color='k')
+    abs_h_f_dB_axis.axvline(f_c_2, color='r')
+    abs_h_f_dB_axis.grid()
+    abs_h_f_dB_axis.set_xlabel('Frequency (Hz)')
+    abs_h_f_dB_axis.set_ylabel(r'$|h_(f)|_{dB}$')
+    abs_h_f_dB_axis.set_title('Target Frequency Magnitude Decibel Response')
+
+    fig.tight_layout()
+
+    plt.show()
 
 
 def showPlots(f, f_c, f_c_1, f_c_2, abs_h_f, exponent_normed_squared_abs_h_f, approximated_exponent_normed_squared_abs_h_f, approximated_abs_h_f):
@@ -159,26 +208,29 @@ def showPlots(f, f_c, f_c_1, f_c_2, abs_h_f, exponent_normed_squared_abs_h_f, ap
 if(__name__=='__main__'):
 
     f_c = 0.2
-    f_delta = 0.075
+    delta_f = 0.075
     f_delta_stop_perc = 0.6
     abs_h_f_c_stop_dB = -25
-
-    reduction_factor = 40
     N = 40
 
     f_step = 0.0001
 
-    f = np.arange(0, 0.5 + f_step, f_step)
+    [f_c_1, f_c_2, f_c, f, abs_h_f, abs_h_f_dB] = calculate_frequency_magnitude_response(f_c, delta_f, f_delta_stop_perc, abs_h_f_c_stop_dB)
 
-    [f_c_1, f_c_2, f_c, abs_h_f] = calculate_frequency_magnitude_response(f, f_c, f_delta, f_delta_stop_perc, abs_h_f_c_stop_dB)
-    exponent_normed_squared_abs_h_f = np.square(np.power(abs_h_f, 1/reduction_factor))
-    cheb_poly_roots = utility.chebyshevSpectrumCalculations.calculateChebyshevSpectrumPolynomialRoots(f, f_delta, exponent_normed_squared_abs_h_f, N)
+    reduction_factor = np.ceil(np.amax(np.abs(abs_h_f_dB))/10)
+    reduced_abs_h_f = np.power(abs_h_f, 1/reduction_factor)
+    squared_reduced_abs_h_f = np.square(reduced_abs_h_f)
 
-    approximated_exponent_normed_squared_abs_h_f = \
-        utility.chebyshevSpectrumCalculations.calculatePartialChebyshevPowerSpectrum(2*np.pi*f, utility.magnitudeDomainRoots.convertLimitedRootsArrayToRootsDictList(False, 'MA', cheb_poly_roots))
-    approximated_exponent_normed_squared_abs_h_f = approximated_exponent_normed_squared_abs_h_f/approximated_exponent_normed_squared_abs_h_f[f == f_c + (f_delta_stop_perc - 1)*f_delta]
+    showPlotsV2(f_c, f_c_1, f_c_2, f, abs_h_f, abs_h_f_dB)
 
-    approximated_abs_h_f = np.power(np.sqrt(approximated_exponent_normed_squared_abs_h_f), reduction_factor)
-
-    showPlots(f, f_c, f_c_1, f_c_2, abs_h_f, exponent_normed_squared_abs_h_f, approximated_exponent_normed_squared_abs_h_f, approximated_abs_h_f)
+    #exponent_normed_squared_abs_h_f = np.square(np.power(abs_h_f, 1/reduction_factor))
+    #cheb_poly_roots = utility.chebyshevSpectrumCalculations.calculateChebyshevSpectrumPolynomialRoots(f, f_delta, exponent_normed_squared_abs_h_f, N)
+    #
+    #approximated_exponent_normed_squared_abs_h_f = \
+    #    utility.chebyshevSpectrumCalculations.calculatePartialChebyshevPowerSpectrum(2*np.pi*f, utility.magnitudeDomainRoots.convertLimitedRootsArrayToRootsDictList(False, 'MA', cheb_poly_roots))
+    #approximated_exponent_normed_squared_abs_h_f = approximated_exponent_normed_squared_abs_h_f/approximated_exponent_normed_squared_abs_h_f[f == f_c + (f_delta_stop_perc - 1)*f_delta]
+    #
+    #approximated_abs_h_f = np.power(np.sqrt(approximated_exponent_normed_squared_abs_h_f), reduction_factor)
+    #
+    #showPlots(f, f_c, f_c_1, f_c_2, abs_h_f, exponent_normed_squared_abs_h_f, approximated_exponent_normed_squared_abs_h_f, approximated_abs_h_f)
 
