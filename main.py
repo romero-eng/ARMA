@@ -20,24 +20,6 @@ def calculate_frequency_magnitude_response(f, f_c, f_delta, f_delta_stop_perc, a
     return [f_c_1, f_c_2, f_c, abs_h_f]
 
 
-def calculateChebyshevPolynomialCoefficients(t, t_delta, f_t, N):
-
-    flipped_cheb_series_n = np.zeros(N)
-    flipped_cheb_series_n[0] = 2*np.sum(f_t)*t_delta
-    for n in np.arange(1, N, 1):
-        flipped_cheb_series_n[n] = 4*np.sum(f_t*np.cos(2*np.pi*n*t))*t_delta
-
-    flipped_cheb_poly_coeffs = np.polynomial.chebyshev.cheb2poly(flipped_cheb_series_n)
-    
-    cheb_poly_coeffs = flipped_cheb_poly_coeffs
-    scale = cheb_poly_coeffs[0]
-    cheb_poly_coeffs = cheb_poly_coeffs/scale
-
-    cheb_poly_roots = np.polynomial.polynomial.polyroots(cheb_poly_coeffs)
-  
-    return [scale, cheb_poly_roots]
-
-
 def showPlots(f, f_c, f_c_1, f_c_2, abs_h_f, exponent_normed_squared_abs_h_f, approximated_exponent_normed_squared_abs_h_f, approximated_abs_h_f):
 
     abs_h_f_dB                                      = 10*np.log10(abs_h_f)
@@ -190,7 +172,7 @@ if(__name__=='__main__'):
 
     [f_c_1, f_c_2, f_c, abs_h_f] = calculate_frequency_magnitude_response(f, f_c, f_delta, f_delta_stop_perc, abs_h_f_c_stop_dB)
     exponent_normed_squared_abs_h_f = np.square(np.power(abs_h_f, 1/reduction_factor))
-    [_, cheb_poly_roots] = calculateChebyshevPolynomialCoefficients(f, f_delta, exponent_normed_squared_abs_h_f, N)
+    cheb_poly_roots = utility.chebyshevSpectrumCalculations.calculateChebyshevSpectrumPolynomialRoots(f, f_delta, exponent_normed_squared_abs_h_f, N)
 
     approximated_exponent_normed_squared_abs_h_f = \
         utility.chebyshevSpectrumCalculations.calculatePartialChebyshevPowerSpectrum(2*np.pi*f, utility.magnitudeDomainRoots.convertLimitedRootsArrayToRootsDictList(False, 'MA', cheb_poly_roots))
