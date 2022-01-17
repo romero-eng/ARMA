@@ -102,16 +102,16 @@ def showPlots(f_c, f_c_1, f_c_2, f, abs_h_f, abs_h_f_dB, abs_h_f_emp, abs_h_f_em
 if(__name__=='__main__'):
 
     f_c = 0.2
-    delta_f = 0.0001
+    delta_f = 0.00001
     transition_bandwidth = 0.075
     transition_bandwidth_stop_perc = 0.7
     abs_h_f_c_stop_dB = -15
-    min_approximation_dB = 10
+    min_approximation_dB = -10
 
     [f_c_1, f_c_2, f_c, f, abs_h_f, abs_h_f_dB] = \
         calculate_frequency_magnitude_response(f_c, delta_f, transition_bandwidth, transition_bandwidth_stop_perc, abs_h_f_c_stop_dB)
 
-    reduction_factor = np.ceil(np.amax(np.abs(abs_h_f_dB))/min_approximation_dB)
+    reduction_factor = np.ceil(-np.amax(np.abs(abs_h_f_dB))/min_approximation_dB)
     reduced_abs_h_f = np.power(abs_h_f, 1/reduction_factor)
     squared_reduced_abs_h_f = np.square(reduced_abs_h_f)
     squared_reduced_abs_h_f_cheb_poly_roots = utility.chebyshevSpectrumCalculations.calculateChebyshevSpectrumPolynomialRoots(f, delta_f, squared_reduced_abs_h_f, 40)
