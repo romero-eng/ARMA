@@ -54,7 +54,7 @@ def showPlots(f_c, f_c_1, f_c_2, f, abs_h_f, abs_h_f_dB, abs_h_f_emp, abs_h_f_em
     
     abs_h_f_axis.plot(f, abs_h_f)
     abs_h_f_axis.set_xlim([0, 0.5])
-    abs_h_f_axis.set_ylim([-0.1, 1.1])
+    #abs_h_f_axis.set_ylim([-0.1, 1.1])
     abs_h_f_axis.axvline(f_c_1, color='r')
     abs_h_f_axis.axvline(f_c, color='k')
     abs_h_f_axis.axvline(f_c_2, color='r')
@@ -104,7 +104,7 @@ if(__name__=='__main__'):
     f_c = 0.2
     delta_f = 0.0001
     transition_bandwidth = 0.075
-    transition_bandwidth_stop_perc = 0.6
+    transition_bandwidth_stop_perc = 0.7
     abs_h_f_c_stop_dB = -15
     min_approximation_dB = 10
 
@@ -132,13 +132,10 @@ if(__name__=='__main__'):
 
     [_, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs, 2*np.pi*f)
     abs_h_f_emp = np.abs(h_f_emp)
-
-    print(np.any(f == f_c_1))
-    AR_z_coefs = AR_z_coefs/np.amax(abs_h_f_emp)
+    MA_z_coefs = MA_z_coefs/abs_h_f_emp[np.floor(f_c_1/delta_f).astype(int)]
 
     [_, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs, 2*np.pi*f)
     abs_h_f_emp = np.abs(h_f_emp)
-    abs_h_f_emp = abs_h_f_emp/np.amax(abs_h_f_emp)
     abs_h_f_emp_dB = 10*np.log10(abs_h_f_emp)
 
     showPlots(f_c, f_c_1, f_c_2, f, abs_h_f, abs_h_f_dB, abs_h_f_emp, abs_h_f_emp_dB)
