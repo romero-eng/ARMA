@@ -89,6 +89,31 @@ class chebyshevSpectrumCalculations:
         cheb_poly_roots = np.polynomial.polynomial.polyroots(cheb_poly)
 
         return cheb_poly_roots
+    
+    @staticmethod
+    def calculateChebyshevSpectrumPolynomialRoots_v2(f, delta_f, sq_abs_h_f, N_max=40):
+
+        cheb_series = []
+        n = 0
+        while(n < N_max):
+            if(n==0):
+                cheb_series.append(2*np.sum(sq_abs_h_f)*delta_f)
+            else:
+                cheb_series.append(4*np.sum(sq_abs_h_f*np.cos(2*np.pi*n*f))*delta_f)
+            n = n + 1
+        
+        cheb_series = np.array(cheb_series)
+
+        # Convert the approximated Chebyshev series into the corresponding Chebyshev Polynomial
+        cheb_poly = np.polynomial.chebyshev.cheb2poly(cheb_series)
+
+        # Normalize the coefficients of the chebyshev polynomial
+        cheb_poly = cheb_poly/cheb_poly[0]
+        
+        # Get the roots of the Chebyshev polynomial roots
+        cheb_poly_roots = np.polynomial.polynomial.polyroots(cheb_poly)
+
+        return cheb_poly_roots
 
 
 class fundamentalFrequencyResponseAndZTransformEquations:
@@ -451,14 +476,25 @@ class magnitudeDomainRoots:
 
     @staticmethod
     def convertLimitedRootsArrayToRootsDictList(withinUnitCircle, MA_or_AR, roots):
+        
+        all_non_complex_roots_bool_array =     np.squeeze(np.imag(roots) == 0)
+        all_complex_roots_bool_array     = np.logical_not(all_non_complex_roots_bool_array)
+        real_roots_exist_flag            =         np.any(all_non_complex_roots_bool_array)
+        imag_roots_exist_flag            =         np.any(    all_complex_roots_bool_array)
 
         # Get all the real roots
-        real_roots = np.real(roots[np.imag(roots) == 0])
+        if(real_roots_exist_flag):
+            real_roots = np.real(roots[all_non_complex_roots_bool_array])
+        else:
+            real_roots = np.array([])
 
         # Get all of the complex roots, and then get the roots with only 
         # negative imaginary components
-        complex_roots = roots[np.imag(roots) != 0]
-        complex_roots = complex_roots[np.imag(complex_roots) < 0]
+        if(imag_roots_exist_flag):
+            complex_roots = roots[np.logical_not(all_non_complex_roots_bool_array)]
+            complex_roots = complex_roots[np.imag(complex_roots) < 0]
+        else:
+            complex_roots = np.array([]).astype(complex)
 
         # Convert the real roots and remaining complex roots into a list of dictionaries, each
         # of which describes an individual root
