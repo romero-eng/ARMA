@@ -71,37 +71,32 @@ class chebyshevSpectrumCalculations:
         return abs_h_f_cheb_theo
 
     @staticmethod
-    def calculateChebyshevSpectrumPolynomialRoots(f, delta_f, sq_abs_h_f, N):
+    def calculateChebyshevSpectrumPolynomialRoots(f, delta_f, sq_abs_h_f, cutoff = 10**-3, N_max=40):
 
-        # Approximate the Chebyshev series coefficents
-        cheb_series = np.zeros(N)
-        cheb_series[0] = 2*np.sum(sq_abs_h_f)*delta_f
-        for n in np.arange(1, N, 1):
-            cheb_series[n] = 4*np.sum(sq_abs_h_f*np.cos(2*np.pi*n*f))*delta_f
-
-        # Convert the approximated Chebyshev series into the corresponding Chebyshev Polynomial
-        cheb_poly = np.polynomial.chebyshev.cheb2poly(cheb_series)
-
-        # Normalize the coefficients of the chebyshev polynomial
-        cheb_poly = cheb_poly/cheb_poly[0]
-
-        # Get the roots of the Chebyshev polynomial roots
-        cheb_poly_roots = np.polynomial.polynomial.polyroots(cheb_poly)
-
-        return cheb_poly_roots
-    
-    @staticmethod
-    def calculateChebyshevSpectrumPolynomialRoots_v2(f, delta_f, sq_abs_h_f, N_max=40):
-
+        # Initialize while-loop variables
         cheb_series = []
         n = 0
-        while(n < N_max):
+        stop_flag = n >= N_max
+
+        # Approximate the Chebyshev series coefficents up to a cutoff or max number of coefficients
+        while(not stop_flag):
+
+            # Calculate the current coefficient of chebyshev series
             if(n==0):
-                cheb_series.append(2*np.sum(sq_abs_h_f)*delta_f)
+                cheb_series_coef = 2*np.sum(sq_abs_h_f)*delta_f
             else:
-                cheb_series.append(4*np.sum(sq_abs_h_f*np.cos(2*np.pi*n*f))*delta_f)
-            n = n + 1
+                cheb_series_coef = 4*np.sum(sq_abs_h_f*np.cos(2*np.pi*n*f))*delta_f
+
+            # If the coefficient is above the cutoff, continue the while-loop
+            cheb_series_coef_not_small = np.abs(cheb_series_coef) >= cutoff
+            if(cheb_series_coef_not_small):
+                cheb_series.append(cheb_series_coef)
+                n = n + 1
+            
+            # Update on whether or not the stop-flag should continue
+            stop_flag = (n >= N_max) or (not cheb_series_coef_not_small)
         
+        # Convert the list to an array
         cheb_series = np.array(cheb_series)
 
         # Convert the approximated Chebyshev series into the corresponding Chebyshev Polynomial
