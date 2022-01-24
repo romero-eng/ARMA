@@ -349,123 +349,6 @@ class frequencyResponseAndZTransformCalculations:
 
         return [abs_h_f, angle_deg_h_f]
 
-    @staticmethod
-    def generateTheoreticalAndEmpiricalResponses(root_dicts_list):
-
-        # Separately calculate the corresponding z-transform coefficients of the 
-        # auto-regressive and moving-average roots, respectively
-        MA_z_coefs = np.array([1])
-        AR_z_coefs = np.array([1])
-        for root_dict in root_dicts_list:
-            [tmp_MA_z_coefs, tmp_AR_z_coefs] = frequencyResponseAndZTransformCalculations.z_trans_coefs(root_dict)
-            MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
-            AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
-
-        # Empirically calculate the frequency magnitude response, the frequency phase
-        # response, and the frequency axis itself
-        [omega, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs)
-        abs_h_f_emp = np.abs(h_f_emp)
-        angle_deg_h_f_emp = np.rad2deg(np.angle(h_f_emp))
-
-        # Calculate the theoretical frequency magnitude and phase responses based on the
-        # individual theoretical responses of each of the roots
-        abs_h_f_theo = np.ones(abs_h_f_emp.shape)
-        angle_deg_h_f_theo = np.zeros(angle_deg_h_f_emp.shape)
-        for root_dict in root_dicts_list:
-            [tmp_abs_h_f_theo, tmp_angle_deg_h_f_theo] = frequencyResponseAndZTransformCalculations.freqz(omega, root_dict)
-            abs_h_f_theo = tmp_abs_h_f_theo*abs_h_f_theo
-            angle_deg_h_f_theo = angle_deg_h_f_theo + tmp_angle_deg_h_f_theo
-        angle_deg_h_f_theo = np.rad2deg(np.arctan2(np.sin(np.deg2rad(angle_deg_h_f_theo)), np.cos(np.deg2rad(angle_deg_h_f_theo)))) # this is done to wrap the phase response
-
-        # Calculate the theoretical Chebyshev spectrum
-        abs_h_f_cheb_theo = chebyshevSpectrumCalculations.calculateEntireChebyshevPowerSpectrum(omega, root_dicts_list)
-    
-        return [omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo]
-
-    @staticmethod
-    def generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo):
-
-        f = omega/(2*np.pi)
-    
-        usetex = mpl.checkdep_usetex(True)
-        if(usetex):
-            plt.rc('text', usetex=True)
-        plt.rc('font', family='serif')
-
-        abs_h_f_emp_idxs        = np.array([0, 0])
-        abs_h_f_theo_idxs       = np.array([1, 0])
-        angle_deg_h_f_emp_idxs  = np.array([0, 1])
-        angle_deg_h_f_theo_idxs = np.array([1, 1])
-        abs_h_f_cheb_theo_idxs  = np.array([2, 0])
-
-        idxs_matrix = np.vstack((abs_h_f_emp_idxs, angle_deg_h_f_emp_idxs, abs_h_f_theo_idxs, angle_deg_h_f_theo_idxs, abs_h_f_cheb_theo_idxs))
-        num_rows = np.amax(idxs_matrix[:, 0]) + 1
-        num_cols = np.amax(idxs_matrix[:, 1]) + 1
-        [fig, axs] = plt.subplots(num_rows, num_cols, figsize=(7, 7))
-        if(len(axs.shape) == 2):
-            abs_h_f_emp_axis        = axs[       abs_h_f_emp_idxs[0],        abs_h_f_emp_idxs[1]]
-            angle_deg_h_f_emp_axis  = axs[ angle_deg_h_f_emp_idxs[0],  angle_deg_h_f_emp_idxs[1]]
-            abs_h_f_theo_axis       = axs[      abs_h_f_theo_idxs[0],       abs_h_f_theo_idxs[1]]
-            angle_deg_h_f_theo_axis = axs[angle_deg_h_f_theo_idxs[0], angle_deg_h_f_theo_idxs[1]]
-            abs_h_f_cheb_theo_axis  = axs[ abs_h_f_cheb_theo_idxs[0],  abs_h_f_cheb_theo_idxs[1]]
-        else:
-            abs_h_f_emp_axis        = axs[np.amax(       abs_h_f_emp_idxs)]
-            angle_deg_h_f_emp_axis  = axs[np.amax( angle_deg_h_f_emp_idxs)]
-            abs_h_f_theo_axis       = axs[np.amax(      abs_h_f_theo_idxs)]
-            angle_deg_h_f_theo_axis = axs[np.amax(angle_deg_h_f_theo_idxs)]
-            abs_h_f_cheb_theo_axis  = axs[np.amax( abs_h_f_cheb_theo_idxs)]
-
-        abs_h_f_emp_axis.plot(f, abs_h_f_emp)
-        abs_h_f_emp_axis.set_xlim([0, 0.5])
-        abs_h_f_emp_axis.grid()
-        abs_h_f_emp_axis.set_xlabel('Frequency (Hz)')
-        if(usetex):
-            abs_h_f_emp_axis.set_ylabel(r'$\big|h(f)\big|$')
-        else:
-            abs_h_f_emp_axis.set_ylabel(r'$|h(f)|$')
-        abs_h_f_emp_axis.set_title('Empirical Magnitude')
-    
-        angle_deg_h_f_emp_axis.plot(f, angle_deg_h_f_emp)
-        angle_deg_h_f_emp_axis.set_xlim([0, 0.5])
-        angle_deg_h_f_emp_axis.grid()
-        angle_deg_h_f_emp_axis.set_xlabel('Frequency (Hz)')
-        angle_deg_h_f_emp_axis.set_ylabel(r'${\angle}h(f)^{\circ}$')
-        angle_deg_h_f_emp_axis.set_title('Empirical Phase')
-
-        abs_h_f_theo_axis.plot(f, abs_h_f_theo)
-        abs_h_f_theo_axis.set_xlim([0, 0.5])
-        abs_h_f_theo_axis.grid()
-        abs_h_f_theo_axis.set_xlabel('Frequency (Hz)')
-        if(usetex):
-            abs_h_f_theo_axis.set_ylabel(r'$\big|h(f)\big|$')
-        else:
-            abs_h_f_theo_axis.set_ylabel(r'$|h(f)|$')
-        abs_h_f_theo_axis.set_title('Theoretical Magnitude')
-    
-        angle_deg_h_f_theo_axis.plot(f, angle_deg_h_f_theo)
-        angle_deg_h_f_theo_axis.set_xlim([0, 0.5])
-        angle_deg_h_f_theo_axis.grid()
-        angle_deg_h_f_theo_axis.set_xlabel('Frequency (Hz)')
-        if(usetex):
-            angle_deg_h_f_theo_axis.set_ylabel(r'${\angle}h(f)^{\circ}$')
-        else:
-            angle_deg_h_f_theo_axis.set_ylabel(r'${\angle}h(f)^\circ$')
-        angle_deg_h_f_theo_axis.set_title('Theoretical Phase')
-
-        abs_h_f_cheb_theo_axis.plot(f, abs_h_f_cheb_theo)
-        abs_h_f_cheb_theo_axis.set_xlim([0, 0.5])
-        abs_h_f_cheb_theo_axis.grid()
-        abs_h_f_cheb_theo_axis.set_xlabel('Frequency (Hz)')
-        if(usetex):
-            abs_h_f_cheb_theo_axis.set_ylabel(r'$\big|h(f)\big|$')
-        else:
-            abs_h_f_cheb_theo_axis.set_ylabel(r'$|h(f)|$')
-        abs_h_f_cheb_theo_axis.set_title('Chebyshev Magnitude')
-
-        fig.tight_layout()
-
-        plt.show()
-
 
 class magnitudeDomainRoots:
 
@@ -502,6 +385,123 @@ class magnitudeDomainRoots:
         return root_dicts_list
 
 
+def generateTheoreticalAndEmpiricalResponses(root_dicts_list):
+
+    # Separately calculate the corresponding z-transform coefficients of the 
+    # auto-regressive and moving-average roots, respectively
+    MA_z_coefs = np.array([1])
+    AR_z_coefs = np.array([1])
+    for root_dict in root_dicts_list:
+        [tmp_MA_z_coefs, tmp_AR_z_coefs] = frequencyResponseAndZTransformCalculations.z_trans_coefs(root_dict)
+        MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
+        AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
+
+    # Empirically calculate the frequency magnitude response, the frequency phase
+    # response, and the frequency axis itself
+    [omega, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs)
+    abs_h_f_emp = np.abs(h_f_emp)
+    angle_deg_h_f_emp = np.rad2deg(np.angle(h_f_emp))
+
+    # Calculate the theoretical frequency magnitude and phase responses based on the
+    # individual theoretical responses of each of the roots
+    abs_h_f_theo = np.ones(abs_h_f_emp.shape)
+    angle_deg_h_f_theo = np.zeros(angle_deg_h_f_emp.shape)
+    for root_dict in root_dicts_list:
+        [tmp_abs_h_f_theo, tmp_angle_deg_h_f_theo] = frequencyResponseAndZTransformCalculations.freqz(omega, root_dict)
+        abs_h_f_theo = tmp_abs_h_f_theo*abs_h_f_theo
+        angle_deg_h_f_theo = angle_deg_h_f_theo + tmp_angle_deg_h_f_theo
+    angle_deg_h_f_theo = np.rad2deg(np.arctan2(np.sin(np.deg2rad(angle_deg_h_f_theo)), np.cos(np.deg2rad(angle_deg_h_f_theo)))) # this is done to wrap the phase response
+
+    # Calculate the theoretical Chebyshev spectrum
+    abs_h_f_cheb_theo = chebyshevSpectrumCalculations.calculateEntireChebyshevPowerSpectrum(omega, root_dicts_list)
+    
+    return [omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo]
+
+
+def generateSpectralPlots(omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo):
+
+    f = omega/(2*np.pi)
+    
+    usetex = mpl.checkdep_usetex(True)
+    if(usetex):
+        plt.rc('text', usetex=True)
+    plt.rc('font', family='serif')
+
+    abs_h_f_emp_idxs        = np.array([0, 0])
+    abs_h_f_theo_idxs       = np.array([1, 0])
+    angle_deg_h_f_emp_idxs  = np.array([0, 1])
+    angle_deg_h_f_theo_idxs = np.array([1, 1])
+    abs_h_f_cheb_theo_idxs  = np.array([2, 0])
+
+    idxs_matrix = np.vstack((abs_h_f_emp_idxs, angle_deg_h_f_emp_idxs, abs_h_f_theo_idxs, angle_deg_h_f_theo_idxs, abs_h_f_cheb_theo_idxs))
+    num_rows = np.amax(idxs_matrix[:, 0]) + 1
+    num_cols = np.amax(idxs_matrix[:, 1]) + 1
+    [fig, axs] = plt.subplots(num_rows, num_cols, figsize=(7, 7))
+    if(len(axs.shape) == 2):
+        abs_h_f_emp_axis        = axs[       abs_h_f_emp_idxs[0],        abs_h_f_emp_idxs[1]]
+        angle_deg_h_f_emp_axis  = axs[ angle_deg_h_f_emp_idxs[0],  angle_deg_h_f_emp_idxs[1]]
+        abs_h_f_theo_axis       = axs[      abs_h_f_theo_idxs[0],       abs_h_f_theo_idxs[1]]
+        angle_deg_h_f_theo_axis = axs[angle_deg_h_f_theo_idxs[0], angle_deg_h_f_theo_idxs[1]]
+        abs_h_f_cheb_theo_axis  = axs[ abs_h_f_cheb_theo_idxs[0],  abs_h_f_cheb_theo_idxs[1]]
+    else:
+        abs_h_f_emp_axis        = axs[np.amax(       abs_h_f_emp_idxs)]
+        angle_deg_h_f_emp_axis  = axs[np.amax( angle_deg_h_f_emp_idxs)]
+        abs_h_f_theo_axis       = axs[np.amax(      abs_h_f_theo_idxs)]
+        angle_deg_h_f_theo_axis = axs[np.amax(angle_deg_h_f_theo_idxs)]
+        abs_h_f_cheb_theo_axis  = axs[np.amax( abs_h_f_cheb_theo_idxs)]
+
+    abs_h_f_emp_axis.plot(f, abs_h_f_emp)
+    abs_h_f_emp_axis.set_xlim([0, 0.5])
+    abs_h_f_emp_axis.grid()
+    abs_h_f_emp_axis.set_xlabel('Frequency (Hz)')
+    if(usetex):
+        abs_h_f_emp_axis.set_ylabel(r'$\big|h(f)\big|$')
+    else:
+        abs_h_f_emp_axis.set_ylabel(r'$|h(f)|$')
+    abs_h_f_emp_axis.set_title('Empirical Magnitude')
+    
+    angle_deg_h_f_emp_axis.plot(f, angle_deg_h_f_emp)
+    angle_deg_h_f_emp_axis.set_xlim([0, 0.5])
+    angle_deg_h_f_emp_axis.grid()
+    angle_deg_h_f_emp_axis.set_xlabel('Frequency (Hz)')
+    angle_deg_h_f_emp_axis.set_ylabel(r'${\angle}h(f)^{\circ}$')
+    angle_deg_h_f_emp_axis.set_title('Empirical Phase')
+
+    abs_h_f_theo_axis.plot(f, abs_h_f_theo)
+    abs_h_f_theo_axis.set_xlim([0, 0.5])
+    abs_h_f_theo_axis.grid()
+    abs_h_f_theo_axis.set_xlabel('Frequency (Hz)')
+    if(usetex):
+        abs_h_f_theo_axis.set_ylabel(r'$\big|h(f)\big|$')
+    else:
+        abs_h_f_theo_axis.set_ylabel(r'$|h(f)|$')
+    abs_h_f_theo_axis.set_title('Theoretical Magnitude')
+    
+    angle_deg_h_f_theo_axis.plot(f, angle_deg_h_f_theo)
+    angle_deg_h_f_theo_axis.set_xlim([0, 0.5])
+    angle_deg_h_f_theo_axis.grid()
+    angle_deg_h_f_theo_axis.set_xlabel('Frequency (Hz)')
+    if(usetex):
+        angle_deg_h_f_theo_axis.set_ylabel(r'${\angle}h(f)^{\circ}$')
+    else:
+        angle_deg_h_f_theo_axis.set_ylabel(r'${\angle}h(f)^\circ$')
+    angle_deg_h_f_theo_axis.set_title('Theoretical Phase')
+
+    abs_h_f_cheb_theo_axis.plot(f, abs_h_f_cheb_theo)
+    abs_h_f_cheb_theo_axis.set_xlim([0, 0.5])
+    abs_h_f_cheb_theo_axis.grid()
+    abs_h_f_cheb_theo_axis.set_xlabel('Frequency (Hz)')
+    if(usetex):
+        abs_h_f_cheb_theo_axis.set_ylabel(r'$\big|h(f)\big|$')
+    else:
+        abs_h_f_cheb_theo_axis.set_ylabel(r'$|h(f)|$')
+    abs_h_f_cheb_theo_axis.set_title('Chebyshev Magnitude')
+
+    fig.tight_layout()
+
+    plt.show()
+
+
 if(__name__=='__main__'):
 
     root_dicts_list = \
@@ -515,11 +515,11 @@ if(__name__=='__main__'):
      abs_h_f_emp, angle_deg_h_f_emp, 
      abs_h_f_theo, angle_deg_h_f_theo, 
      abs_h_f_cheb_theo] = \
-        frequencyResponseAndZTransformCalculations.generateTheoreticalAndEmpiricalResponses(root_dicts_list)
+        generateTheoreticalAndEmpiricalResponses(root_dicts_list)
 
-    frequencyResponseAndZTransformCalculations.generateSpectralPlots(omega,
-                                                                     abs_h_f_emp/np.amax(abs_h_f_emp), 
-                                                                     angle_deg_h_f_emp, 
-                                                                     abs_h_f_theo/np.amax(abs_h_f_theo), 
-                                                                     angle_deg_h_f_theo, 
-                                                                     abs_h_f_cheb_theo/np.amax(abs_h_f_cheb_theo))
+    generateSpectralPlots(omega,
+                          abs_h_f_emp/np.amax(abs_h_f_emp), 
+                          angle_deg_h_f_emp, 
+                          abs_h_f_theo/np.amax(abs_h_f_theo), 
+                          angle_deg_h_f_theo, 
+                          abs_h_f_cheb_theo/np.amax(abs_h_f_cheb_theo))
