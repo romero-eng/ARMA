@@ -111,8 +111,8 @@ if(__name__=='__main__'):
     [f_c_1, f_c_2, f_c, f, abs_h_f, abs_h_f_dB] = \
         calculate_frequency_magnitude_response(f_c, delta_f, transition_bandwidth, transition_bandwidth_stop_perc, abs_h_f_c_stop_dB)
 
-    reduction_factor = np.ceil(-np.amax(np.abs(abs_h_f_dB))/min_approximation_dB)
-    reduced_abs_h_f = np.power(abs_h_f, 1/reduction_factor)
+    root_repeating_factor = np.ceil(-np.amax(np.abs(abs_h_f_dB))/min_approximation_dB)
+    reduced_abs_h_f = np.power(abs_h_f, 1/root_repeating_factor)
     squared_reduced_abs_h_f = np.square(reduced_abs_h_f)
     squared_reduced_abs_h_f_cheb_poly_roots = utility.chebyshevSpectrumCalculations.calculateChebyshevSpectrumPolynomialRoots(f, delta_f, squared_reduced_abs_h_f)
     squared_reduced_abs_h_f_cheb_poly_root_dicts_list = utility.magnitudeDomainRoots.convertLimitedRootsArrayToRootsDictList(False, 'MA', squared_reduced_abs_h_f_cheb_poly_roots)
@@ -123,10 +123,13 @@ if(__name__=='__main__'):
         [tmp_MA_z_coefs, tmp_AR_z_coefs] = utility.frequencyResponseAndZTransformCalculations.z_trans_coefs(root_dict)
         MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
         AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
+        #for repeat_idx in np.arange(0, root_repeating_factor, 1):
+        #    MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
+        #    AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
 
     tmp_MA_z_coefs = MA_z_coefs
     tmp_AR_z_coefs = AR_z_coefs
-    for tmp_idx in np.arange(0, reduction_factor, 1):
+    for tmp_idx in np.arange(0, root_repeating_factor, 1):
         MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
         AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
 
@@ -137,5 +140,7 @@ if(__name__=='__main__'):
     [_, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs, 2*np.pi*f)
     abs_h_f_emp = np.abs(h_f_emp)
     abs_h_f_emp_dB = 10*np.log10(abs_h_f_emp)
+
+    print(MA_z_coefs.shape)
 
     showPlots(f_c, f_c_1, f_c_2, f, abs_h_f, abs_h_f_dB, abs_h_f_emp, abs_h_f_emp_dB)
