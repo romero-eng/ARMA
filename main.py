@@ -114,7 +114,7 @@ if(__name__=='__main__'):
     reduction_factor = np.ceil(-np.amax(np.abs(abs_h_f_dB))/min_approximation_dB)
     reduced_abs_h_f = np.power(abs_h_f, 1/reduction_factor)
     squared_reduced_abs_h_f = np.square(reduced_abs_h_f)
-    squared_reduced_abs_h_f_cheb_poly_roots = utility.chebyshevSpectrumCalculations.calculateChebyshevSpectrumPolynomialRoots(f, delta_f, squared_reduced_abs_h_f, 40)
+    squared_reduced_abs_h_f_cheb_poly_roots = utility.chebyshevSpectrumCalculations.calculateChebyshevSpectrumPolynomialRoots(f, delta_f, squared_reduced_abs_h_f)
     squared_reduced_abs_h_f_cheb_poly_root_dicts_list = utility.magnitudeDomainRoots.convertLimitedRootsArrayToRootsDictList(False, 'MA', squared_reduced_abs_h_f_cheb_poly_roots)
 
     MA_z_coefs = np.array([1])
