@@ -129,7 +129,7 @@ if(__name__=='__main__'):
 
     tmp_MA_z_coefs = MA_z_coefs
     tmp_AR_z_coefs = AR_z_coefs
-    for tmp_idx in np.arange(0, root_repeating_factor, 1):
+    for repeat_idx in np.arange(0, root_repeating_factor, 1):
         MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
         AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
 
