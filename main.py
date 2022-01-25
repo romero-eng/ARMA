@@ -141,6 +141,6 @@ if(__name__=='__main__'):
     abs_h_f_emp = np.abs(h_f_emp)
     abs_h_f_emp_dB = 10*np.log10(abs_h_f_emp)
 
-    print(MA_z_coefs.shape)
+    print(MA_z_coefs.shape[0])
 
     showPlots(f_c, f_c_1, f_c_2, f, abs_h_f, abs_h_f_dB, abs_h_f_emp, abs_h_f_emp_dB)
