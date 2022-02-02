@@ -120,18 +120,23 @@ if(__name__=='__main__'):
     MA_z_coefs = np.array([1])
     AR_z_coefs = np.array([1])
     for root_dict in squared_reduced_abs_h_f_cheb_poly_root_dicts_list:
-        [tmp_MA_z_coefs, tmp_AR_z_coefs] = utility.frequencyResponseAndZTransformCalculations.z_trans_coefs(root_dict)
+        #[tmp_MA_z_coefs, tmp_AR_z_coefs] = utility.frequencyResponseAndZTransformCalculations.z_trans_coefs(root_dict)
+        #MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
+        #AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
+        [root_specific_MA_z_coefs, root_specific_AR_z_coefs] = utility.frequencyResponseAndZTransformCalculations.z_trans_coefs(root_dict)
+        tmp_MA_z_coefs = np.array([1])
+        tmp_AR_z_coefs = np.array([1])
+        for repeat_idx in np.arange(0, root_repeating_factor, 1):
+            tmp_MA_z_coefs = np.polynomial.polynomial.polymul(tmp_MA_z_coefs, root_specific_MA_z_coefs)
+            tmp_AR_z_coefs = np.polynomial.polynomial.polymul(tmp_AR_z_coefs, root_specific_AR_z_coefs)
         MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
         AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
-        #for repeat_idx in np.arange(0, root_repeating_factor, 1):
-        #    MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
-        #    AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
 
-    tmp_MA_z_coefs = MA_z_coefs
-    tmp_AR_z_coefs = AR_z_coefs
-    for repeat_idx in np.arange(0, root_repeating_factor, 1):
-        MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
-        AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
+    #tmp_MA_z_coefs = MA_z_coefs
+    #tmp_AR_z_coefs = AR_z_coefs
+    #for repeat_idx in np.arange(0, root_repeating_factor, 1):
+    #    MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
+    #    AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
 
     [_, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs, 2*np.pi*f)
     abs_h_f_emp = np.abs(h_f_emp)
