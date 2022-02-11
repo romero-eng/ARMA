@@ -117,35 +117,19 @@ if(__name__=='__main__'):
     squared_reduced_abs_h_f_cheb_poly_roots = utility.chebyshevSpectrumCalculations.calculateChebyshevSpectrumPolynomialRoots(f, delta_f, squared_reduced_abs_h_f)
     squared_reduced_abs_h_f_cheb_poly_root_dicts_list = utility.magnitudeDomainRoots.convertLimitedRootsArrayToRootsDictList(False, 'MA', squared_reduced_abs_h_f_cheb_poly_roots)
 
-    print('')
-    print([len(squared_reduced_abs_h_f_cheb_poly_root_dicts_list), int(root_repeating_factor)])
-    print('')
-
-    i = 1
-
     MA_z_coefs = np.array([1])
     AR_z_coefs = np.array([1])
     for root_dict in squared_reduced_abs_h_f_cheb_poly_root_dicts_list:
+
         [tmp_MA_z_coefs, tmp_AR_z_coefs] = utility.frequencyResponseAndZTransformCalculations.z_trans_coefs(root_dict)
         MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
         AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
-        #[root_specific_MA_z_coefs, root_specific_AR_z_coefs] = utility.frequencyResponseAndZTransformCalculations.z_trans_coefs(root_dict)
-        #tmp_MA_z_coefs = np.array([1])
-        #tmp_AR_z_coefs = np.array([1])
-        #for repeat_idx in np.arange(0, root_repeating_factor, 1):
-        #    tmp_MA_z_coefs = np.polynomial.polynomial.polymul(tmp_MA_z_coefs, root_specific_MA_z_coefs)
-        #    tmp_AR_z_coefs = np.polynomial.polynomial.polymul(tmp_AR_z_coefs, root_specific_AR_z_coefs)
-        #MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
-        #AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
-        #print([MA_z_coefs.shape[0], i]); i = i + 1
 
     tmp_MA_z_coefs = MA_z_coefs
     tmp_AR_z_coefs = AR_z_coefs
-    print([MA_z_coefs.shape[0], i])
     for repeat_idx in np.arange(0, root_repeating_factor - 1, 1):
         MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
         AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
-        i = i + 1; print([MA_z_coefs.shape[0], i])
 
     [_, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs, 2*np.pi*f)
     abs_h_f_emp = np.abs(h_f_emp)
@@ -154,9 +138,5 @@ if(__name__=='__main__'):
     [_, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs, 2*np.pi*f)
     abs_h_f_emp = np.abs(h_f_emp)
     abs_h_f_emp_dB = 10*np.log10(abs_h_f_emp)
-
-    print('')
-    print(MA_z_coefs.shape[0])
-    print('')
 
     showPlots(f_c, f_c_1, f_c_2, f, abs_h_f, abs_h_f_dB, abs_h_f_emp, abs_h_f_emp_dB)
