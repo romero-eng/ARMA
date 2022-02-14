@@ -19,9 +19,7 @@ def calculate_frequency_magnitude_response(f_c, delta_f, transition_bandwidth, t
     z_score_f = (f - mu)/sigma
     abs_h_f = 1/(1 + np.exp(z_score_f))
 
-    abs_h_f_dB = 10*np.log10(abs_h_f)
-
-    return [f_c_1, f_c_2, f_c, f, abs_h_f, abs_h_f_dB]
+    return [f_c_1, f_c_2, f_c, f, abs_h_f]
 
 
 def showPlots(f_c, f_c_1, f_c_2, f, abs_h_f, abs_h_f_dB, abs_h_f_theo, abs_h_f_theo_dB, abs_h_f_emp, abs_h_f_emp_dB):
@@ -135,7 +133,10 @@ if(__name__=='__main__'):
     abs_h_f_c_stop_dB = -15
     min_approximation_dB = -10
 
-    [f_c_1, f_c_2, f_c, f, abs_h_f, abs_h_f_dB] = \
+    withinUnitCircle = False
+    MA_or_AR = 'MA'
+
+    [f_c_1, f_c_2, f_c, f, abs_h_f] = \
         calculate_frequency_magnitude_response(f_c, delta_f, transition_bandwidth, transition_bandwidth_stop_perc, abs_h_f_c_stop_dB)
 
 
@@ -143,11 +144,14 @@ if(__name__=='__main__'):
     ######################################################################################################################################################################################################
     ######################################################################################################################################################################################################
 
+    abs_h_f_dB = 10*np.log10(abs_h_f)
+
     root_repeating_factor = np.ceil(-np.amax(np.abs(abs_h_f_dB))/min_approximation_dB)
     reduced_abs_h_f = np.power(abs_h_f, 1/root_repeating_factor)
+
     squared_reduced_abs_h_f = np.square(reduced_abs_h_f)
     squared_reduced_abs_h_f_cheb_poly_roots = utility.chebyshevSpectrumCalculations.calculateChebyshevSpectrumPolynomialRoots(f, delta_f, squared_reduced_abs_h_f)
-    squared_reduced_abs_h_f_cheb_poly_root_dicts_list = utility.magnitudeDomainRoots.convertLimitedRootsArrayToRootsDictList(False, 'MA', squared_reduced_abs_h_f_cheb_poly_roots)
+    squared_reduced_abs_h_f_cheb_poly_root_dicts_list = utility.magnitudeDomainRoots.convertLimitedRootsArrayToRootsDictList(withinUnitCircle, MA_or_AR, squared_reduced_abs_h_f_cheb_poly_roots)
 
     ######################################################################################################################################################################################################
     ######################################################################################################################################################################################################
@@ -156,24 +160,24 @@ if(__name__=='__main__'):
     AR_z_coefs = np.array([1])
     for root_dict in squared_reduced_abs_h_f_cheb_poly_root_dicts_list:
 
-        #[tmp_MA_z_coefs, tmp_AR_z_coefs] = utility.frequencyResponseAndZTransformCalculations.z_trans_coefs(root_dict)
-        #MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
-        #AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
-
-        [root_specific_MA_z_coefs, root_specific_AR_z_coefs] = utility.frequencyResponseAndZTransformCalculations.z_trans_coefs(root_dict)
-        tmp_MA_z_coefs = root_specific_MA_z_coefs
-        tmp_AR_z_coefs = root_specific_AR_z_coefs
-        for repeat_idx in np.arange(0, root_repeating_factor - 1, 1):
-            tmp_MA_z_coefs = np.polynomial.polynomial.polymul(tmp_MA_z_coefs, root_specific_MA_z_coefs)
-            tmp_AR_z_coefs = np.polynomial.polynomial.polymul(tmp_AR_z_coefs, root_specific_AR_z_coefs)
+        [tmp_MA_z_coefs, tmp_AR_z_coefs] = utility.frequencyResponseAndZTransformCalculations.z_trans_coefs(root_dict)
         MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
         AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
 
-    #tmp_MA_z_coefs = MA_z_coefs
-    #tmp_AR_z_coefs = AR_z_coefs
-    #for repeat_idx in np.arange(0, root_repeating_factor - 1, 1):
-    #    MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
-    #    AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
+        #[root_specific_MA_z_coefs, root_specific_AR_z_coefs] = utility.frequencyResponseAndZTransformCalculations.z_trans_coefs(root_dict)
+        #tmp_MA_z_coefs = root_specific_MA_z_coefs
+        #tmp_AR_z_coefs = root_specific_AR_z_coefs
+        #for repeat_idx in np.arange(0, root_repeating_factor - 1, 1):
+        #    tmp_MA_z_coefs = np.polynomial.polynomial.polymul(tmp_MA_z_coefs, root_specific_MA_z_coefs)
+        #    tmp_AR_z_coefs = np.polynomial.polynomial.polymul(tmp_AR_z_coefs, root_specific_AR_z_coefs)
+        #MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
+        #AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
+
+    tmp_MA_z_coefs = MA_z_coefs
+    tmp_AR_z_coefs = AR_z_coefs
+    for repeat_idx in np.arange(0, root_repeating_factor - 1, 1):
+        MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
+        AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
 
     ######################################################################################################################################################################################################
     ######################################################################################################################################################################################################
