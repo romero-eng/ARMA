@@ -164,6 +164,7 @@ if(__name__=='__main__'):
         MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
         AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
 
+        ## Doing it this way results in numerical instability
         #[root_specific_MA_z_coefs, root_specific_AR_z_coefs] = utility.frequencyResponseAndZTransformCalculations.z_trans_coefs(root_dict)
         #tmp_MA_z_coefs = root_specific_MA_z_coefs
         #tmp_AR_z_coefs = root_specific_AR_z_coefs
