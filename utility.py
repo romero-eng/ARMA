@@ -4,6 +4,26 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 
+class spectralEstimation:
+
+    @staticmethod
+    def estimateUniqueSpectralChebyshevPolynomialRoots(delta_f, f, abs_h_f, min_approximation_dB, withinUnitCircle, MA_or_AR):
+
+        # calculate the magnitude in decibels
+        abs_h_f_dB = 10*np.log10(abs_h_f)
+
+        # calculate the number of times each root has to be repeated as well as the exponentially-reducted frequency magnitude
+        root_repeating_factor = np.ceil(-np.amax(np.abs(abs_h_f_dB))/min_approximation_dB)
+        reduced_abs_h_f = np.power(abs_h_f, 1/root_repeating_factor)
+
+        # Calculate the unique roots of the Chebyshev Polynomial of the reduced and squared frequency magnitude
+        squared_reduced_abs_h_f = np.square(reduced_abs_h_f)
+        squared_reduced_abs_h_f_cheb_poly_roots = chebyshevSpectrumCalculations.calculateChebyshevSpectrumPolynomialRoots(delta_f, f, squared_reduced_abs_h_f)
+        squared_reduced_abs_h_f_cheb_poly_root_dicts_list = magnitudeDomainRoots.convertLimitedRootsArrayToRootsDictList(withinUnitCircle, MA_or_AR, squared_reduced_abs_h_f_cheb_poly_roots)
+
+        return [abs_h_f_dB, root_repeating_factor, squared_reduced_abs_h_f_cheb_poly_root_dicts_list]
+
+
 class chebyshevSpectrumCalculations:
 
     @staticmethod
@@ -71,7 +91,7 @@ class chebyshevSpectrumCalculations:
         return abs_h_f_cheb_theo
 
     @staticmethod
-    def calculateChebyshevSpectrumPolynomialRoots(f, delta_f, sq_abs_h_f, cutoff = 10**-3, N_max=40):
+    def calculateChebyshevSpectrumPolynomialRoots(delta_f, f, sq_abs_h_f, cutoff = 10**-3, N_max=40):
 
         # Initialize while-loop variables
         cheb_series = []
