@@ -144,14 +144,15 @@ if(__name__=='__main__'):
     ######################################################################################################################################################################################################
     ######################################################################################################################################################################################################
 
-    abs_h_f_dB = 10*np.log10(abs_h_f)
-
-    root_repeating_factor = np.ceil(-np.amax(np.abs(abs_h_f_dB))/min_approximation_dB)
-    reduced_abs_h_f = np.power(abs_h_f, 1/root_repeating_factor)
-
-    squared_reduced_abs_h_f = np.square(reduced_abs_h_f)
-    squared_reduced_abs_h_f_cheb_poly_roots = utility.chebyshevSpectrumCalculations.calculateChebyshevSpectrumPolynomialRoots(f, delta_f, squared_reduced_abs_h_f)
-    squared_reduced_abs_h_f_cheb_poly_root_dicts_list = utility.magnitudeDomainRoots.convertLimitedRootsArrayToRootsDictList(withinUnitCircle, MA_or_AR, squared_reduced_abs_h_f_cheb_poly_roots)
+    [abs_h_f_dB, 
+     root_repeating_factor, 
+     squared_reduced_abs_h_f_cheb_poly_root_dicts_list] = \
+        utility.spectralEstimation.estimateUniqueSpectralChebyshevPolynomialRoots(delta_f, 
+                                                                                  f, 
+                                                                                  abs_h_f, 
+                                                                                  min_approximation_dB, 
+                                                                                  withinUnitCircle, 
+                                                                                  MA_or_AR)
 
     ######################################################################################################################################################################################################
     ######################################################################################################################################################################################################
@@ -165,6 +166,7 @@ if(__name__=='__main__'):
         AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
 
         ## Doing it this way results in numerical instability
+        #
         #[root_specific_MA_z_coefs, root_specific_AR_z_coefs] = utility.frequencyResponseAndZTransformCalculations.z_trans_coefs(root_dict)
         #tmp_MA_z_coefs = root_specific_MA_z_coefs
         #tmp_AR_z_coefs = root_specific_AR_z_coefs
