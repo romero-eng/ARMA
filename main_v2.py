@@ -22,7 +22,7 @@ if(__name__=='__main__'):
     elif(lowpass_or_highpass == 'highpass'):
         sign = 1
     else:
-        raise ValueError()
+        raise ValueError('The ''lowpass_or_highpass'' variable must either be ''lowpass'' or ''highpass''.')
 
     f_bin_width = 0.01
     AUC = 0.99
