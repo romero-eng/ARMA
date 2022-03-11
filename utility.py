@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 class spectralEstimation:
 
     @staticmethod
-    def estimateUniqueSpectralChebyshevPolynomialRoots(delta_f, f, abs_h_f, min_approximation_dB, withinUnitCircle, MA_or_AR):
+    def estimateUniqueSquaredSpectralChebyshevPolynomialRoots(delta_f, f, abs_h_f, min_approximation_dB, withinUnitCircle, MA_or_AR):
 
         # calculate the magnitude in decibels
         abs_h_f_dB = 10*np.log10(abs_h_f)
@@ -22,6 +22,37 @@ class spectralEstimation:
         squared_reduced_abs_h_f_cheb_poly_root_dicts_list = magnitudeDomainRoots.convertLimitedRootsArrayToRootsDictList(withinUnitCircle, MA_or_AR, squared_reduced_abs_h_f_cheb_poly_roots)
 
         return [abs_h_f_dB, root_repeating_factor, squared_reduced_abs_h_f_cheb_poly_root_dicts_list]
+
+    @staticmethod
+    def estimateSpectralZTransCoefs(root_repeating_factor, squared_reduced_abs_h_f_cheb_poly_root_dicts_list):
+
+        MA_z_coefs = np.array([1])
+        AR_z_coefs = np.array([1])
+        for root_dict in squared_reduced_abs_h_f_cheb_poly_root_dicts_list:
+
+            [tmp_MA_z_coefs, tmp_AR_z_coefs] = frequencyResponseAndZTransformCalculations.z_trans_coefs(root_dict)
+            MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
+            AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
+
+            ## Doing it this way results in numerical instability
+            #
+            #[root_specific_MA_z_coefs, root_specific_AR_z_coefs] = frequencyResponseAndZTransformCalculations.z_trans_coefs(root_dict)
+            #tmp_MA_z_coefs = root_specific_MA_z_coefs
+            #tmp_AR_z_coefs = root_specific_AR_z_coefs
+            #for repeat_idx in np.arange(0, root_repeating_factor - 1, 1):
+            #    tmp_MA_z_coefs = np.polynomial.polynomial.polymul(tmp_MA_z_coefs, root_specific_MA_z_coefs)
+            #    tmp_AR_z_coefs = np.polynomial.polynomial.polymul(tmp_AR_z_coefs, root_specific_AR_z_coefs)
+            #MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
+            #AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
+
+        tmp_MA_z_coefs = MA_z_coefs
+        tmp_AR_z_coefs = AR_z_coefs
+        for repeat_idx in np.arange(0, root_repeating_factor - 1, 1):
+            MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
+            AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
+
+        return [MA_z_coefs, AR_z_coefs]
+
 
 
 class chebyshevSpectrumCalculations:
