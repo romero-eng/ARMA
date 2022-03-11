@@ -75,7 +75,7 @@ class spectralEstimation:
         # For each unique root...
         for root_dict in squared_reduced_abs_h_f_cheb_poly_root_dicts_list:
             # For each time each unique root has to be repeated....
-            for repeat_idx in np.arange(0, root_repeating_factor - 1, 1):
+            for repeat_idx in np.arange(0, root_repeating_factor, 1):
 
                 # Temporarily store the root-specific theoretical frequency magnitude and phase
                 [tmp_abs_h_f_theo, tmp_angle_deg_h_f_theo] = frequencyResponseAndZTransformCalculations.freqz(2*np.pi*f, root_dict)
@@ -513,7 +513,7 @@ def generateTheoreticalAndEmpiricalResponses_v2(root_dicts_list):
     abs_h_f_emp = np.abs(h_f_emp)
     angle_deg_h_f_emp = np.rad2deg(np.angle(h_f_emp))
 
-    [abs_h_f_theo, angle_deg_h_f_theo] = spectralEstimation.estimateSpectralMagnitudeAndPhase(omega/(2*np.pi), 2, root_dicts_list) # error over here???
+    [abs_h_f_theo, angle_deg_h_f_theo] = spectralEstimation.estimateSpectralMagnitudeAndPhase(omega/(2*np.pi), 1, root_dicts_list) # error over here???
 
     abs_h_f_cheb_theo = chebyshevSpectrumCalculations.calculateEntireChebyshevPowerSpectrum(omega, root_dicts_list)
 
