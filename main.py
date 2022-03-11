@@ -159,19 +159,11 @@ if(__name__=='__main__'):
         utility.spectralEstimation.estimateSpectralZTransCoefs(root_repeating_factor, 
                                                                squared_reduced_abs_h_f_cheb_poly_root_dicts_list)
 
-    ######################################################################################################################################################################################################
-    ######################################################################################################################################################################################################
-
-    abs_h_f_theo = np.ones(abs_h_f.shape)
-
-    for root_dict in squared_reduced_abs_h_f_cheb_poly_root_dicts_list:
-        for repeat_idx in np.arange(0, root_repeating_factor - 1, 1):
-            [tmp_abs_h_f_theo, _] = utility.frequencyResponseAndZTransformCalculations.freqz(2*np.pi*f, root_dict)
-            abs_h_f_theo = tmp_abs_h_f_theo*abs_h_f_theo
-
-    abs_h_f_theo = abs_h_f_theo/abs_h_f_theo[np.floor(f_c_1/delta_f).astype(int)]
-
-    abs_h_f_theo_dB = 10*np.log10(abs_h_f_theo)
+    [abs_h_f_theo, 
+     angle_deg_h_f_theo] = \
+        utility.spectralEstimation.estimateSpectralMagnitudeAndPhase(f, 
+                                                                     root_repeating_factor, 
+                                                                     squared_reduced_abs_h_f_cheb_poly_root_dicts_list)
 
     ######################################################################################################################################################################################################
     ######################################################################################################################################################################################################
@@ -180,6 +172,9 @@ if(__name__=='__main__'):
     [_, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs, 2*np.pi*f)
     abs_h_f_emp = np.abs(h_f_emp)
     MA_z_coefs = MA_z_coefs/abs_h_f_emp[np.floor(f_c_1/delta_f).astype(int)]
+
+    abs_h_f_theo = abs_h_f_theo/abs_h_f_theo[np.floor(f_c_1/delta_f).astype(int)]
+    abs_h_f_theo_dB = 10*np.log10(abs_h_f_theo)
 
     [_, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs, 2*np.pi*f)
     abs_h_f_emp = np.abs(h_f_emp)
