@@ -473,15 +473,9 @@ class magnitudeDomainRoots:
 
 
 def generateTheoreticalAndEmpiricalResponses(root_dicts_list):
-
-    # Separately calculate the corresponding z-transform coefficients of the 
-    # auto-regressive and moving-average roots, respectively
-    MA_z_coefs = np.array([1])
-    AR_z_coefs = np.array([1])
-    for root_dict in root_dicts_list:
-        [tmp_MA_z_coefs, tmp_AR_z_coefs] = frequencyResponseAndZTransformCalculations.z_trans_coefs(root_dict)
-        MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
-        AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
+    
+    # Calculate the corresponding z-transform coefficients of each unique root
+    [MA_z_coefs, AR_z_coefs] = spectralEstimation.estimateSpectralZTransCoefs(1, root_dicts_list)
 
     # Empirically calculate the frequency magnitude response, the frequency phase
     # response, and the frequency axis itself
@@ -490,31 +484,10 @@ def generateTheoreticalAndEmpiricalResponses(root_dicts_list):
     angle_deg_h_f_emp = np.rad2deg(np.angle(h_f_emp))
 
     # Calculate the theoretical frequency magnitude and phase responses based on the
-    # individual theoretical responses of each of the roots
-    abs_h_f_theo = np.ones(abs_h_f_emp.shape)
-    angle_deg_h_f_theo = np.zeros(angle_deg_h_f_emp.shape)
-    for root_dict in root_dicts_list:
-        [tmp_abs_h_f_theo, tmp_angle_deg_h_f_theo] = frequencyResponseAndZTransformCalculations.freqz(omega, root_dict)
-        abs_h_f_theo = tmp_abs_h_f_theo*abs_h_f_theo
-        angle_deg_h_f_theo = angle_deg_h_f_theo + tmp_angle_deg_h_f_theo
-    angle_deg_h_f_theo = np.rad2deg(np.arctan2(np.sin(np.deg2rad(angle_deg_h_f_theo)), np.cos(np.deg2rad(angle_deg_h_f_theo)))) # this is done to wrap the phase response
+    # individual theoretical responses of each of the unique roots
+    [abs_h_f_theo, angle_deg_h_f_theo] = spectralEstimation.estimateSpectralMagnitudeAndPhase(omega/(2*np.pi), 1, root_dicts_list)
 
     # Calculate the theoretical Chebyshev spectrum
-    abs_h_f_cheb_theo = chebyshevSpectrumCalculations.calculateEntireChebyshevPowerSpectrum(omega, root_dicts_list)
-    
-    return [omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo]
-
-
-def generateTheoreticalAndEmpiricalResponses_v2(root_dicts_list):
-    
-    [MA_z_coefs, AR_z_coefs] = spectralEstimation.estimateSpectralZTransCoefs(1, root_dicts_list)
-
-    [omega, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs)
-    abs_h_f_emp = np.abs(h_f_emp)
-    angle_deg_h_f_emp = np.rad2deg(np.angle(h_f_emp))
-
-    [abs_h_f_theo, angle_deg_h_f_theo] = spectralEstimation.estimateSpectralMagnitudeAndPhase(omega/(2*np.pi), 1, root_dicts_list) # error over here???
-
     abs_h_f_cheb_theo = chebyshevSpectrumCalculations.calculateEntireChebyshevPowerSpectrum(omega, root_dicts_list)
 
     return [omega, abs_h_f_emp, angle_deg_h_f_emp, abs_h_f_theo, angle_deg_h_f_theo, abs_h_f_cheb_theo]
@@ -617,11 +590,18 @@ if(__name__=='__main__'):
      abs_h_f_emp, angle_deg_h_f_emp, 
      abs_h_f_theo, angle_deg_h_f_theo, 
      abs_h_f_cheb_theo] = \
-        generateTheoreticalAndEmpiricalResponses_v2(root_dicts_list)
+        generateTheoreticalAndEmpiricalResponses(root_dicts_list)
+
+    #generateSpectralPlots(omega,
+    #                      abs_h_f_emp/np.amax(abs_h_f_emp), 
+    #                      angle_deg_h_f_emp, 
+    #                      abs_h_f_theo/np.amax(abs_h_f_theo), 
+    #                      angle_deg_h_f_theo, 
+    #                      abs_h_f_cheb_theo/np.amax(abs_h_f_cheb_theo))
 
     generateSpectralPlots(omega,
-                          abs_h_f_emp/np.amax(abs_h_f_emp), 
+                          abs_h_f_emp, 
                           angle_deg_h_f_emp, 
-                          abs_h_f_theo/np.amax(abs_h_f_theo), 
+                          abs_h_f_theo, 
                           angle_deg_h_f_theo, 
-                          abs_h_f_cheb_theo/np.amax(abs_h_f_cheb_theo))
+                          abs_h_f_cheb_theo)
