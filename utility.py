@@ -26,10 +26,15 @@ class spectralEstimation:
     @staticmethod
     def estimateSpectralZTransCoefs(root_repeating_factor, squared_reduced_abs_h_f_cheb_poly_root_dicts_list):
 
+        # Initialize the moving-average and autoregressive z-transform coefficients
         MA_z_coefs = np.array([1])
         AR_z_coefs = np.array([1])
+
+        # For every unique root in the chebyshev polynomial of the squared magnitude spectrum...
         for root_dict in squared_reduced_abs_h_f_cheb_poly_root_dicts_list:
 
+            # Multiply the corresponding z-transform polynomials of each unique root with the existent z-transform
+            # coefficients. This will get the coefficients corresponding to the exponentially reduced spectrum.
             [tmp_MA_z_coefs, tmp_AR_z_coefs] = frequencyResponseAndZTransformCalculations.z_trans_coefs(root_dict)
             MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
             AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
@@ -45,14 +50,20 @@ class spectralEstimation:
             #MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
             #AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
 
+        # Get the coefficients corresponding to the exponentially reduced spectrum, and store them
+        # in temporary variables. 
         tmp_MA_z_coefs = MA_z_coefs
         tmp_AR_z_coefs = AR_z_coefs
+
+        # For every time each unique root has to be repeated,...
         for repeat_idx in np.arange(0, root_repeating_factor - 1, 1):
+
+            # Multiply the existent z-transform coefficients with the original temporarily
+            # stored z-transform coefficients
             MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
             AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
 
         return [MA_z_coefs, AR_z_coefs]
-
 
 
 class chebyshevSpectrumCalculations:
