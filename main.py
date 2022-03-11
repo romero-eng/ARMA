@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import utility
 
 
-def calculate_frequency_magnitude_response(f_c, delta_f, transition_bandwidth, transition_bandwidth_stop_perc, abs_h_f_c_stop_dB):
+def calculate_frequency_magnitude_response(f_c, f_bin_width, transition_bandwidth, transition_bandwidth_stop_perc, abs_h_f_c_stop_dB):
     
     f_c_2 = f_c + transition_bandwidth_stop_perc*transition_bandwidth
     f_c_1 = f_c_2 - transition_bandwidth
@@ -15,7 +15,7 @@ def calculate_frequency_magnitude_response(f_c, delta_f, transition_bandwidth, t
     sigma = (f_c_2 - f_c_1)/np.log((abs_h_f_c_1/abs_h_f_c_2)*((1 - abs_h_f_c_2)/(1 - abs_h_f_c_1)))
     mu = f_c_1  - sigma*np.log((1 - abs_h_f_c_1)/abs_h_f_c_1)
   
-    f = np.arange(0, 0.5 + delta_f, delta_f)
+    f = np.arange(0, 0.5 + f_bin_width, f_bin_width)
     z_score_f = (f - mu)/sigma
     abs_h_f = 1/(1 + np.exp(z_score_f))
 
@@ -127,7 +127,7 @@ def showPlots(f_c, f_c_1, f_c_2, f, abs_h_f, abs_h_f_dB, abs_h_f_theo, abs_h_f_t
 if(__name__=='__main__'):
 
     f_c = 0.2
-    delta_f = 0.00001
+    f_bin_width = 0.00001
     transition_bandwidth = 0.075
     transition_bandwidth_stop_perc = 0.7
     abs_h_f_c_stop_dB = -15
@@ -137,7 +137,7 @@ if(__name__=='__main__'):
     MA_or_AR = 'MA'
 
     [f_c_1, f_c_2, f_c, f, abs_h_f] = \
-        calculate_frequency_magnitude_response(f_c, delta_f, transition_bandwidth, transition_bandwidth_stop_perc, abs_h_f_c_stop_dB)
+        calculate_frequency_magnitude_response(f_c, f_bin_width, transition_bandwidth, transition_bandwidth_stop_perc, abs_h_f_c_stop_dB)
 
 
     ######################################################################################################################################################################################################
@@ -147,7 +147,7 @@ if(__name__=='__main__'):
     [abs_h_f_dB, 
      root_repeating_factor, 
      squared_reduced_abs_h_f_cheb_poly_root_dicts_list] = \
-        utility.spectralEstimation.estimateUniqueSquaredSpectralChebyshevPolynomialRoots(delta_f, 
+        utility.spectralEstimation.estimateUniqueSquaredSpectralChebyshevPolynomialRoots(f_bin_width, 
                                                                                          f, 
                                                                                          abs_h_f, 
                                                                                          min_approximation_dB, 
@@ -171,9 +171,9 @@ if(__name__=='__main__'):
 
     [_, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs, 2*np.pi*f)
     abs_h_f_emp = np.abs(h_f_emp)
-    MA_z_coefs = MA_z_coefs/abs_h_f_emp[np.floor(f_c_1/delta_f).astype(int)]
+    MA_z_coefs = MA_z_coefs/abs_h_f_emp[np.floor(f_c_1/f_bin_width).astype(int)]
 
-    abs_h_f_theo = abs_h_f_theo/abs_h_f_theo[np.floor(f_c_1/delta_f).astype(int)]
+    abs_h_f_theo = abs_h_f_theo/abs_h_f_theo[np.floor(f_c_1/f_bin_width).astype(int)]
     abs_h_f_theo_dB = 10*np.log10(abs_h_f_theo)
 
     [_, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs, 2*np.pi*f)

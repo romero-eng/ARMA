@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 class spectralEstimation:
 
     @staticmethod
-    def estimateUniqueSquaredSpectralChebyshevPolynomialRoots(delta_f, f, abs_h_f, min_approximation_dB, withinUnitCircle, MA_or_AR):
+    def estimateUniqueSquaredSpectralChebyshevPolynomialRoots(f_bin_width, f, abs_h_f, min_approximation_dB, withinUnitCircle, MA_or_AR):
 
         # calculate the magnitude in decibels
         abs_h_f_dB = 10*np.log10(abs_h_f)
@@ -18,7 +18,7 @@ class spectralEstimation:
 
         # Calculate the unique roots of the Chebyshev Polynomial of the reduced and squared frequency magnitude
         squared_reduced_abs_h_f = np.square(reduced_abs_h_f)
-        squared_reduced_abs_h_f_cheb_poly_roots = chebyshevSpectrumCalculations.calculateChebyshevSpectrumPolynomialRoots(delta_f, f, squared_reduced_abs_h_f)
+        squared_reduced_abs_h_f_cheb_poly_roots = chebyshevSpectrumCalculations.calculateChebyshevSpectrumPolynomialRoots(f_bin_width, f, squared_reduced_abs_h_f)
         squared_reduced_abs_h_f_cheb_poly_root_dicts_list = magnitudeDomainRoots.convertLimitedRootsArrayToRootsDictList(withinUnitCircle, MA_or_AR, squared_reduced_abs_h_f_cheb_poly_roots)
 
         return [abs_h_f_dB, root_repeating_factor, squared_reduced_abs_h_f_cheb_poly_root_dicts_list]
@@ -158,7 +158,7 @@ class chebyshevSpectrumCalculations:
         return abs_h_f_cheb_theo
 
     @staticmethod
-    def calculateChebyshevSpectrumPolynomialRoots(delta_f, f, sq_abs_h_f, cutoff = 10**-3, N_max=40):
+    def calculateChebyshevSpectrumPolynomialRoots(f_bin_width, f, sq_abs_h_f, cutoff = 10**-3, N_max=40):
 
         # Initialize while-loop variables
         cheb_series = []
@@ -170,9 +170,9 @@ class chebyshevSpectrumCalculations:
 
             # Calculate the current coefficient of chebyshev series
             if(n==0):
-                cheb_series_coef = 2*np.sum(sq_abs_h_f)*delta_f
+                cheb_series_coef = 2*np.sum(sq_abs_h_f)*f_bin_width
             else:
-                cheb_series_coef = 4*np.sum(sq_abs_h_f*np.cos(2*np.pi*n*f))*delta_f
+                cheb_series_coef = 4*np.sum(sq_abs_h_f*np.cos(2*np.pi*n*f))*f_bin_width
 
             # If the coefficient is above the cutoff, continue the while-loop
             cheb_series_coef_not_small = np.abs(cheb_series_coef) >= cutoff
