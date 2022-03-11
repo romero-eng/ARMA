@@ -5,17 +5,7 @@ import matplotlib.pyplot as plt
 import utility
 
 
-if(__name__=='__main__'):
-
-
-    exponent = 4
-    lowpass_or_highpass = 'lowpass'
-    f_s     = (90.0)*np.power(10, exponent)
-    f_c     = (10.0)*np.power(10, exponent)
-    delta_f = ( 2.5)*np.power(10, exponent)
-    min_dB = -120
-
-    ##############################################################################################################################
+def calculateFrequencyMagnitudeResponse(lowpass_or_highpass, f_s, f_c, delta_f, f_bin_width=0.01, AUC=0.99, min_dB=-120):
 
     if(lowpass_or_highpass == 'lowpass'):
         sign = -1
@@ -24,13 +14,15 @@ if(__name__=='__main__'):
     else:
         raise ValueError('The ''lowpass_or_highpass'' variable must either be ''lowpass'' or ''highpass''.')
 
-    f_bin_width = 0.01
-    AUC = 0.99
-
     f = np.arange(f_bin_width, (f_s/2) + f_bin_width, f_bin_width)
     sigma = delta_f/np.log((1 + AUC)/(1 - AUC))
     epsilon = 10**(min_dB/10)
     abs_h_f = (1/(1 + epsilon))*(special.expit(sign*(f - f_c)/sigma) + epsilon)
+
+    return [f, abs_h_f]
+
+
+def showPlots(f, abs_h_f):
 
     plt.rc('text', usetex=True)
     plt.rc('font', family='serif')
@@ -40,7 +32,7 @@ if(__name__=='__main__'):
     mag_plot_dB_ax = axs[1]
 
     mag_plot_ax.plot(f, abs_h_f)
-    mag_plot_ax.set_xlim([f_bin_width, f_s/2])
+    mag_plot_ax.set_xlim([f[0], f[len(f) - 1]])
     mag_plot_ax.axvline(f_c - delta_f, color='r', linestyle='--')
     mag_plot_ax.axvline(f_c, color='k')
     mag_plot_ax.axvline(f_c + delta_f, color='r', linestyle='--')
@@ -51,7 +43,7 @@ if(__name__=='__main__'):
     mag_plot_ax.set_title('Frequency Magnitude Response')
 
     mag_plot_dB_ax.plot(f, 10*np.log10(abs_h_f))
-    mag_plot_dB_ax.set_xlim([f_bin_width, f_s/2])
+    mag_plot_dB_ax.set_xlim([f[0], f[len(f) - 1]])
     mag_plot_dB_ax.axvline(f_c - delta_f, color='r', linestyle='--')
     mag_plot_dB_ax.axvline(f_c, color='k')
     mag_plot_dB_ax.axvline(f_c + delta_f, color='r', linestyle='--')
@@ -64,3 +56,18 @@ if(__name__=='__main__'):
     fig.tight_layout()
 
     plt.show()
+
+
+if(__name__=='__main__'):
+
+
+    exponent = 4
+
+    lowpass_or_highpass = 'lowpass'
+    f_s     = (90.0)*np.power(10, exponent)
+    f_c     = (10.0)*np.power(10, exponent)
+    delta_f = ( 2.5)*np.power(10, exponent)
+
+    [f, abs_h_f] = calculateFrequencyMagnitudeResponse(lowpass_or_highpass, f_s, f_c, delta_f)
+
+    showPlots(f, abs_h_f)
