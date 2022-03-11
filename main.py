@@ -39,7 +39,7 @@ def showPlots(f_c, f_c_1, f_c_2, f, abs_h_f, abs_h_f_dB, abs_h_f_theo, abs_h_f_t
     
     num_rows = np.amax(idxs_matrix[:, 0]) + 1
     num_cols = np.amax(idxs_matrix[:, 1]) + 1
-    [fig, axs] = plt.subplots(num_rows, num_cols)
+    [fig, axs] = plt.subplots(num_rows, num_cols, figsize=(16, 7))
 
     if(len(axs.shape) == 2):
         abs_h_f_axis         = axs[        abs_h_f_idxs[0],         abs_h_f_idxs[1]]
@@ -147,40 +147,17 @@ if(__name__=='__main__'):
     [abs_h_f_dB, 
      root_repeating_factor, 
      squared_reduced_abs_h_f_cheb_poly_root_dicts_list] = \
-        utility.spectralEstimation.estimateUniqueSpectralChebyshevPolynomialRoots(delta_f, 
-                                                                                  f, 
-                                                                                  abs_h_f, 
-                                                                                  min_approximation_dB, 
-                                                                                  withinUnitCircle, 
-                                                                                  MA_or_AR)
+        utility.spectralEstimation.estimateUniqueSquaredSpectralChebyshevPolynomialRoots(delta_f, 
+                                                                                         f, 
+                                                                                         abs_h_f, 
+                                                                                         min_approximation_dB, 
+                                                                                         withinUnitCircle, 
+                                                                                         MA_or_AR)
 
-    ######################################################################################################################################################################################################
-    ######################################################################################################################################################################################################
-
-    MA_z_coefs = np.array([1])
-    AR_z_coefs = np.array([1])
-    for root_dict in squared_reduced_abs_h_f_cheb_poly_root_dicts_list:
-
-        [tmp_MA_z_coefs, tmp_AR_z_coefs] = utility.frequencyResponseAndZTransformCalculations.z_trans_coefs(root_dict)
-        MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
-        AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
-
-        ## Doing it this way results in numerical instability
-        #
-        #[root_specific_MA_z_coefs, root_specific_AR_z_coefs] = utility.frequencyResponseAndZTransformCalculations.z_trans_coefs(root_dict)
-        #tmp_MA_z_coefs = root_specific_MA_z_coefs
-        #tmp_AR_z_coefs = root_specific_AR_z_coefs
-        #for repeat_idx in np.arange(0, root_repeating_factor - 1, 1):
-        #    tmp_MA_z_coefs = np.polynomial.polynomial.polymul(tmp_MA_z_coefs, root_specific_MA_z_coefs)
-        #    tmp_AR_z_coefs = np.polynomial.polynomial.polymul(tmp_AR_z_coefs, root_specific_AR_z_coefs)
-        #MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
-        #AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
-
-    tmp_MA_z_coefs = MA_z_coefs
-    tmp_AR_z_coefs = AR_z_coefs
-    for repeat_idx in np.arange(0, root_repeating_factor - 1, 1):
-        MA_z_coefs = np.polynomial.polynomial.polymul(MA_z_coefs, tmp_MA_z_coefs)
-        AR_z_coefs = np.polynomial.polynomial.polymul(AR_z_coefs, tmp_AR_z_coefs)
+    [MA_z_coefs, 
+     AR_z_coefs] =\
+        utility.spectralEstimation.estimateSpectralZTransCoefs(root_repeating_factor, 
+                                                               squared_reduced_abs_h_f_cheb_poly_root_dicts_list)
 
     ######################################################################################################################################################################################################
     ######################################################################################################################################################################################################
