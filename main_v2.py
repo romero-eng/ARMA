@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import utility
 
 
-def calculateFrequencyMagnitudeResponse(lowpass_or_highpass, f_s, f_c, delta_f, f_bin_width=0.01, AUC=0.99, min_dB=-120):
+def calculateFrequencyMagnitudeResponse(lowpass_or_highpass, f_s, f_c, delta_f, f_bin_width, AUC, min_dB):
 
     if(lowpass_or_highpass == 'lowpass'):
         sign = -1
@@ -63,11 +63,38 @@ if(__name__=='__main__'):
 
     exponent = 4
 
+    withinUnitCircle = False
+    MA_or_AR = 'MA'
     lowpass_or_highpass = 'lowpass'
     f_s     = (90.0)*np.power(10, exponent)
     f_c     = (10.0)*np.power(10, exponent)
     delta_f = ( 2.5)*np.power(10, exponent)
 
-    [f, abs_h_f] = calculateFrequencyMagnitudeResponse(lowpass_or_highpass, f_s, f_c, delta_f)
+    f_bin_width = 0.01
+    AUC = 0.99
+    min_dB = -120
+
+    [f, abs_h_f] = calculateFrequencyMagnitudeResponse(lowpass_or_highpass, f_s, f_c, delta_f, f_bin_width, AUC, min_dB)
+
+    [abs_h_f_dB, 
+     root_repeating_factor, 
+     squared_reduced_abs_h_f_cheb_poly_root_dicts_list] = \
+        utility.spectralEstimation.estimateUniqueSquaredSpectralChebyshevPolynomialRoots(f_bin_width, 
+                                                                                         f, 
+                                                                                         abs_h_f, 
+                                                                                         min_dB, 
+                                                                                         withinUnitCircle, 
+                                                                                         MA_or_AR)
+
+    [MA_z_coefs, 
+     AR_z_coefs] =\
+        utility.spectralEstimation.estimateSpectralZTransCoefs(root_repeating_factor, 
+                                                               squared_reduced_abs_h_f_cheb_poly_root_dicts_list)
+
+    [abs_h_f_theo, 
+     angle_deg_h_f_theo] = \
+        utility.spectralEstimation.estimateSpectralMagnitudeAndPhase(f, 
+                                                                     root_repeating_factor, 
+                                                                     squared_reduced_abs_h_f_cheb_poly_root_dicts_list)
 
     showPlots(f, abs_h_f)
