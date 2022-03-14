@@ -22,17 +22,42 @@ def calculateFrequencyMagnitudeResponse(lowpass_or_highpass, f_s, f_c, delta_f, 
     return [f, abs_h_f]
 
 
-def showPlots(f, abs_h_f):
+def showPlots(exponent, f, abs_h_f, abs_h_f_theo):
+
+    f_begin = f[0]
+    f_end = f[len(f) - 1]
+
+    mag_plot_ax_idxs         = np.array([0, 0])
+    mag_plot_dB_ax_idxs      = np.array([1, 0])
+    theo_mag_plot_ax_idxs    = np.array([0, 1])
+    theo_mag_plot_dB_ax_idxs = np.array([1, 1])
+    
+    idxs_matrix = \
+        np.vstack((mag_plot_ax_idxs,
+                   mag_plot_dB_ax_idxs,
+                   theo_mag_plot_ax_idxs,
+                   theo_mag_plot_dB_ax_idxs))
 
     plt.rc('text', usetex=True)
     plt.rc('font', family='serif')
 
-    [fig, axs] = plt.subplots(1, 2, figsize=(10, 4))
-    mag_plot_ax    = axs[0]
-    mag_plot_dB_ax = axs[1]
+    num_rows = np.amax(idxs_matrix[:, 0]) + 1
+    num_cols = np.amax(idxs_matrix[:, 1]) + 1
+    [fig, axs] = plt.subplots(num_rows, num_cols, figsize=(16, 7))
+
+    if(len(axs.shape) == 2):
+        mag_plot_ax         = axs[        mag_plot_ax_idxs[0],         mag_plot_ax_idxs[1]]
+        mag_plot_dB_ax      = axs[     mag_plot_dB_ax_idxs[0],      mag_plot_dB_ax_idxs[1]]
+        theo_mag_plot_ax    = axs[   theo_mag_plot_ax_idxs[0],    theo_mag_plot_ax_idxs[1]]
+        theo_mag_plot_dB_ax = axs[theo_mag_plot_dB_ax_idxs[0], theo_mag_plot_dB_ax_idxs[1]]
+    else:
+        mag_plot_ax         = axs[np.amax(        mag_plot_ax_idxs)]
+        mag_plot_dB_ax      = axs[np.amax(     mag_plot_dB_ax_idxs)]
+        theo_mag_plot_ax    = axs[np.amax(   theo_mag_plot_ax_idxs)]
+        theo_mag_plot_dB_ax = axs[np.amax(theo_mag_plot_dB_ax_idxs)]
 
     mag_plot_ax.plot(f, abs_h_f)
-    mag_plot_ax.set_xlim([f[0], f[len(f) - 1]])
+    mag_plot_ax.set_xlim([f_begin, f_end])
     mag_plot_ax.axvline(f_c - delta_f, color='r', linestyle='--')
     mag_plot_ax.axvline(f_c, color='k')
     mag_plot_ax.axvline(f_c + delta_f, color='r', linestyle='--')
@@ -43,7 +68,7 @@ def showPlots(f, abs_h_f):
     mag_plot_ax.set_title('Frequency Magnitude Response')
 
     mag_plot_dB_ax.plot(f, 10*np.log10(abs_h_f))
-    mag_plot_dB_ax.set_xlim([f[0], f[len(f) - 1]])
+    mag_plot_dB_ax.set_xlim([f_begin, f_end])
     mag_plot_dB_ax.axvline(f_c - delta_f, color='r', linestyle='--')
     mag_plot_dB_ax.axvline(f_c, color='k')
     mag_plot_dB_ax.axvline(f_c + delta_f, color='r', linestyle='--')
@@ -52,6 +77,28 @@ def showPlots(f, abs_h_f):
     mag_plot_dB_ax.set_xlabel('Frequency (Hz)')
     mag_plot_dB_ax.set_ylabel(r'$|h_(f)|_{dB}$')
     mag_plot_dB_ax.set_title('Frequency Magnitude Response (dB)')
+
+    theo_mag_plot_ax.plot(f, abs_h_f_theo)
+    theo_mag_plot_ax.set_xlim([f_begin, f_end])
+    theo_mag_plot_ax.axvline(f_c - delta_f, color='r', linestyle='--')
+    theo_mag_plot_ax.axvline(f_c, color='k')
+    theo_mag_plot_ax.axvline(f_c + delta_f, color='r', linestyle='--')
+    theo_mag_plot_ax.grid()
+    theo_mag_plot_ax.ticklabel_format(style='sci', axis='x', scilimits=(exponent,exponent))
+    theo_mag_plot_ax.set_xlabel('Frequency (Hz)')
+    theo_mag_plot_ax.set_ylabel(r'$|h_(f)|$')
+    theo_mag_plot_ax.set_title('Theoretical Frequency Magnitude Response')
+
+    theo_mag_plot_dB_ax.plot(f, 10*np.log10(abs_h_f_theo))
+    theo_mag_plot_dB_ax.set_xlim([f_begin, f_end])
+    theo_mag_plot_dB_ax.axvline(f_c - delta_f, color='r', linestyle='--')
+    theo_mag_plot_dB_ax.axvline(f_c, color='k')
+    theo_mag_plot_dB_ax.axvline(f_c + delta_f, color='r', linestyle='--')
+    theo_mag_plot_dB_ax.grid()
+    theo_mag_plot_dB_ax.ticklabel_format(style='sci', axis='x', scilimits=(exponent,exponent))
+    theo_mag_plot_dB_ax.set_xlabel('Frequency (Hz)')
+    theo_mag_plot_dB_ax.set_ylabel(r'$|h_(f)|_{dB}$')
+    theo_mag_plot_dB_ax.set_title('Theoretical Frequency Magnitude Response (dB)')
     
     fig.tight_layout()
 
@@ -60,31 +107,38 @@ def showPlots(f, abs_h_f):
 
 if(__name__=='__main__'):
 
-
-    exponent = 4
-
     withinUnitCircle = False
     MA_or_AR = 'MA'
     lowpass_or_highpass = 'lowpass'
-    f_s     = (90.0)*np.power(10, exponent)
-    f_c     = (10.0)*np.power(10, exponent)
-    delta_f = ( 2.5)*np.power(10, exponent)
 
-    f_bin_width = 0.01
+    exponent = 4
+    f_s     = (90.0)*(10**exponent)
+    f_c     = (10.0)*(10**exponent)
+    delta_f = ( 2.5)*(10**exponent)
+
+    #f_s = 1
+    #f_c = 0.2
+    #delta_f = 0.025
+
+    f_bin_width = 10
     AUC = 0.99
-    min_dB = -120
+    min_dB = -21 #120
 
     [f, abs_h_f] = calculateFrequencyMagnitudeResponse(lowpass_or_highpass, f_s, f_c, delta_f, f_bin_width, AUC, min_dB)
+
+    norm_f = f/f_s
+    norm_f_bin_width = f_bin_width/f_s
 
     [abs_h_f_dB, 
      root_repeating_factor, 
      squared_reduced_abs_h_f_cheb_poly_root_dicts_list] = \
-        utility.spectralEstimation.estimateUniqueSquaredSpectralChebyshevPolynomialRoots(f_bin_width, 
-                                                                                         f, 
+        utility.spectralEstimation.estimateUniqueSquaredSpectralChebyshevPolynomialRoots(norm_f_bin_width, 
+                                                                                         norm_f, 
                                                                                          abs_h_f, 
                                                                                          min_dB, 
                                                                                          withinUnitCircle, 
-                                                                                         MA_or_AR)
+                                                                                         MA_or_AR,
+                                                                                         10**-(5 + exponent))
 
     [MA_z_coefs, 
      AR_z_coefs] =\
@@ -93,8 +147,11 @@ if(__name__=='__main__'):
 
     [abs_h_f_theo, 
      angle_deg_h_f_theo] = \
-        utility.spectralEstimation.estimateSpectralMagnitudeAndPhase(f, 
+        utility.spectralEstimation.estimateSpectralMagnitudeAndPhase(norm_f, 
                                                                      root_repeating_factor, 
                                                                      squared_reduced_abs_h_f_cheb_poly_root_dicts_list)
 
-    showPlots(f, abs_h_f)
+    print(f_c - delta_f)
+    abs_h_f_theo = abs_h_f_theo/abs_h_f_theo[np.floor((f_c - delta_f)/f_bin_width).astype(int)]
+
+    showPlots(exponent, f, abs_h_f, abs_h_f_theo)
