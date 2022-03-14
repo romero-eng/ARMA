@@ -186,7 +186,7 @@ class chebyshevSpectrumCalculations:
         # Convert the list to an array
         cheb_series = np.array(cheb_series)
 
-        print(cheb_series)
+        print('\nchebyshev series coefficients: \n\n' + np.array2string(cheb_series) + '\n')
 
         # Convert the approximated Chebyshev series into the corresponding Chebyshev Polynomial
         cheb_poly = np.polynomial.chebyshev.cheb2poly(cheb_series)
