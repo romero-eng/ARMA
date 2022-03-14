@@ -22,7 +22,7 @@ def calculateFrequencyMagnitudeResponse(lowpass_or_highpass, f_s, f_c, delta_f, 
     return [f, abs_h_f]
 
 
-def showPlots(exponent, f, abs_h_f, abs_h_f_theo):
+def showPlots(exponent, f, abs_h_f, abs_h_f_theo, abs_h_f_emp):
 
     f_begin = f[0]
     f_end = f[len(f) - 1]
@@ -31,12 +31,16 @@ def showPlots(exponent, f, abs_h_f, abs_h_f_theo):
     mag_plot_dB_ax_idxs      = np.array([1, 0])
     theo_mag_plot_ax_idxs    = np.array([0, 1])
     theo_mag_plot_dB_ax_idxs = np.array([1, 1])
+    emp_mag_plot_ax_idxs     = np.array([0, 2])
+    emp_mag_plot_dB_ax_idxs  = np.array([1, 2])
     
     idxs_matrix = \
         np.vstack((mag_plot_ax_idxs,
                    mag_plot_dB_ax_idxs,
                    theo_mag_plot_ax_idxs,
-                   theo_mag_plot_dB_ax_idxs))
+                   theo_mag_plot_dB_ax_idxs,
+                   emp_mag_plot_ax_idxs,
+                   emp_mag_plot_dB_ax_idxs))
 
     plt.rc('text', usetex=True)
     plt.rc('font', family='serif')
@@ -50,11 +54,15 @@ def showPlots(exponent, f, abs_h_f, abs_h_f_theo):
         mag_plot_dB_ax      = axs[     mag_plot_dB_ax_idxs[0],      mag_plot_dB_ax_idxs[1]]
         theo_mag_plot_ax    = axs[   theo_mag_plot_ax_idxs[0],    theo_mag_plot_ax_idxs[1]]
         theo_mag_plot_dB_ax = axs[theo_mag_plot_dB_ax_idxs[0], theo_mag_plot_dB_ax_idxs[1]]
+        emp_mag_plot_ax     = axs[    emp_mag_plot_ax_idxs[0],     emp_mag_plot_ax_idxs[1]]
+        emp_mag_plot_dB_ax  = axs[ emp_mag_plot_dB_ax_idxs[0],  emp_mag_plot_dB_ax_idxs[1]]
     else:
         mag_plot_ax         = axs[np.amax(        mag_plot_ax_idxs)]
         mag_plot_dB_ax      = axs[np.amax(     mag_plot_dB_ax_idxs)]
         theo_mag_plot_ax    = axs[np.amax(   theo_mag_plot_ax_idxs)]
         theo_mag_plot_dB_ax = axs[np.amax(theo_mag_plot_dB_ax_idxs)]
+        emp_mag_plot_ax     = axs[np.amax(    emp_mag_plot_ax_idxs)]
+        emp_mag_plot_dB_ax  = axs[np.amax( emp_mag_plot_dB_ax_idxs)]
 
     mag_plot_ax.plot(f, abs_h_f)
     mag_plot_ax.set_xlim([f_begin, f_end])
@@ -99,6 +107,28 @@ def showPlots(exponent, f, abs_h_f, abs_h_f_theo):
     theo_mag_plot_dB_ax.set_xlabel('Frequency (Hz)')
     theo_mag_plot_dB_ax.set_ylabel(r'$|h_(f)|_{dB}$')
     theo_mag_plot_dB_ax.set_title('Theoretical Frequency Magnitude Response (dB)')
+
+    emp_mag_plot_ax.plot(f, abs_h_f_emp)
+    emp_mag_plot_ax.set_xlim([f_begin, f_end])
+    emp_mag_plot_ax.axvline(f_c - delta_f, color='r', linestyle='--')
+    emp_mag_plot_ax.axvline(f_c, color='k')
+    emp_mag_plot_ax.axvline(f_c + delta_f, color='r', linestyle='--')
+    emp_mag_plot_ax.grid()
+    emp_mag_plot_ax.ticklabel_format(style='sci', axis='x', scilimits=(exponent,exponent))
+    emp_mag_plot_ax.set_xlabel('Frequency (Hz)')
+    emp_mag_plot_ax.set_ylabel(r'$|h_(f)|$')
+    emp_mag_plot_ax.set_title('Empirical Frequency Magnitude Response')
+
+    emp_mag_plot_dB_ax.plot(f, 10*np.log10(abs_h_f_emp))
+    emp_mag_plot_dB_ax.set_xlim([f_begin, f_end])
+    emp_mag_plot_dB_ax.axvline(f_c - delta_f, color='r', linestyle='--')
+    emp_mag_plot_dB_ax.axvline(f_c, color='k')
+    emp_mag_plot_dB_ax.axvline(f_c + delta_f, color='r', linestyle='--')
+    emp_mag_plot_dB_ax.grid()
+    emp_mag_plot_dB_ax.ticklabel_format(style='sci', axis='x', scilimits=(exponent,exponent))
+    emp_mag_plot_dB_ax.set_xlabel('Frequency (Hz)')
+    emp_mag_plot_dB_ax.set_ylabel(r'$|h_(f)|_{dB}$')
+    emp_mag_plot_dB_ax.set_title('Empirical Frequency Magnitude Response (dB)')
     
     fig.tight_layout()
 
@@ -115,7 +145,7 @@ if(__name__=='__main__'):
     f_s     = (90.0)*(10**exponent)
     f_c     = (10.0)*(10**exponent)
     delta_f = ( 2.5)*(10**exponent)
-    min_dB = -120
+    min_dB = -20
 
     f_bin_width = 10
     AUC = 0.99
@@ -148,6 +178,13 @@ if(__name__=='__main__'):
                                                                      root_repeating_factor, 
                                                                      squared_reduced_abs_h_f_cheb_poly_root_dicts_list)
     
-    abs_h_f_theo = abs_h_f_theo/abs_h_f_theo[np.floor((f_c - delta_f)/f_bin_width).astype(int)]
+    norm_value = abs_h_f_theo[np.floor((f_c - delta_f)/f_bin_width).astype(int)]
+    abs_h_f_theo = abs_h_f_theo/norm_value
+    MA_z_coefs = MA_z_coefs/norm_value
 
-    showPlots(exponent, f, abs_h_f, abs_h_f_theo)
+    [_, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs, 2*np.pi*f)
+    abs_h_f_emp = np.abs(h_f_emp)
+
+    print(root_repeating_factor)
+
+    showPlots(exponent, f, abs_h_f, abs_h_f_theo, abs_h_f_emp)
