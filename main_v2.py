@@ -147,10 +147,7 @@ if(__name__=='__main__'):
         utility.spectralEstimation.estimateSpectralMagnitudeAndPhase(norm_f, 
                                                                      root_repeating_factor, 
                                                                      squared_reduced_abs_h_f_cheb_poly_root_dicts_list)
-
-    print(root_repeating_factor)
-    print(MA_z_coefs.shape)
-    print(f_c - delta_f)
+    
     abs_h_f_theo = abs_h_f_theo/abs_h_f_theo[np.floor((f_c - delta_f)/f_bin_width).astype(int)]
 
     showPlots(exponent, f, abs_h_f, abs_h_f_theo)
