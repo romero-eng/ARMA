@@ -114,11 +114,12 @@ if(__name__=='__main__'):
     exponent = 4
     f_s     = (90.0)*(10**exponent)
     f_c     = (10.0)*(10**exponent)
-    delta_f = ( 3.5)*(10**exponent)
+    delta_f = ( 2.5)*(10**exponent)
+    min_dB = -120
 
     f_bin_width = 10
     AUC = 0.99
-    min_dB = -30 #120
+    min_approximation_dB = -10
 
     [f, abs_h_f] = calculateFrequencyMagnitudeResponse(lowpass_or_highpass, f_s, f_c, delta_f, f_bin_width, AUC, min_dB)
 
@@ -131,10 +132,10 @@ if(__name__=='__main__'):
         utility.spectralEstimation.estimateUniqueSquaredSpectralChebyshevPolynomialRoots(norm_f_bin_width, 
                                                                                          norm_f, 
                                                                                          abs_h_f, 
-                                                                                         min_dB, 
+                                                                                         min_approximation_dB, 
                                                                                          withinUnitCircle, 
                                                                                          MA_or_AR,
-                                                                                         10**-(5 + exponent))
+                                                                                         10**-5)
 
     [MA_z_coefs, 
      AR_z_coefs] =\
@@ -147,6 +148,8 @@ if(__name__=='__main__'):
                                                                      root_repeating_factor, 
                                                                      squared_reduced_abs_h_f_cheb_poly_root_dicts_list)
 
+    print(root_repeating_factor)
+    print(MA_z_coefs.shape)
     print(f_c - delta_f)
     abs_h_f_theo = abs_h_f_theo/abs_h_f_theo[np.floor((f_c - delta_f)/f_bin_width).astype(int)]
 
