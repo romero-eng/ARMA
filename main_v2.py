@@ -114,15 +114,11 @@ if(__name__=='__main__'):
     exponent = 4
     f_s     = (90.0)*(10**exponent)
     f_c     = (10.0)*(10**exponent)
-    delta_f = ( 2.5)*(10**exponent)
-
-    #f_s = 1
-    #f_c = 0.2
-    #delta_f = 0.025
+    delta_f = ( 3.5)*(10**exponent)
 
     f_bin_width = 10
     AUC = 0.99
-    min_dB = -21 #120
+    min_dB = -30 #120
 
     [f, abs_h_f] = calculateFrequencyMagnitudeResponse(lowpass_or_highpass, f_s, f_c, delta_f, f_bin_width, AUC, min_dB)
 
