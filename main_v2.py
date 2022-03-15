@@ -145,7 +145,7 @@ if(__name__=='__main__'):
     f_s     = (90.0)*(10**exponent)
     f_c     = (10.0)*(10**exponent)
     delta_f = ( 2.5)*(10**exponent)
-    min_dB = -20
+    min_dB = -120
 
     f_bin_width = 10
     AUC = 0.99
@@ -182,9 +182,7 @@ if(__name__=='__main__'):
     abs_h_f_theo = abs_h_f_theo/norm_value
     MA_z_coefs = MA_z_coefs/norm_value
 
-    [_, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs, 2*np.pi*f)
+    [_, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs, 2*np.pi*norm_f)
     abs_h_f_emp = np.abs(h_f_emp)
-
-    print(root_repeating_factor)
 
     showPlots(exponent, f, abs_h_f, abs_h_f_theo, abs_h_f_emp)
