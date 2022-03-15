@@ -32,7 +32,7 @@ class spectralEstimation:
         elif(MA_or_AR == 'AR'):
             MA_or_AR_str = 'auto-regressive'
 
-        print('\n' + MA_or_AR_str + ' chebyshev series coefficients: \n\n' + np.array2string(squared_reduced_abs_h_f_cheb_series_coefs) + '\n')
+        print('\n' + MA_or_AR_str + ' chebyshev series coefficients of unique roots: \n\n' + np.array2string(squared_reduced_abs_h_f_cheb_series_coefs) + '\n')
 
         return [abs_h_f_dB, root_repeating_factor, squared_reduced_abs_h_f_cheb_poly_root_dicts_list]
 
