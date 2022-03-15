@@ -19,7 +19,7 @@ def calculateFrequencyMagnitudeResponse(lowpass_or_highpass, f_s, f_c, delta_f, 
     epsilon = 10**(min_dB/10)
     abs_h_f = (1/(1 + epsilon))*(special.expit(sign*(f - f_c)/sigma) + epsilon)
 
-    return [f, abs_h_f]
+    return [sign, f, abs_h_f]
 
 
 def showPlots(exponent, f, f_c, delta_f, abs_h_f, abs_h_f_theo, abs_h_f_emp):
@@ -139,19 +139,19 @@ if(__name__=='__main__'):
 
     withinUnitCircle = False
     MA_or_AR = 'MA'
-    lowpass_or_highpass = 'lowpass'
+    lowpass_or_highpass = 'highpass'
 
     exponent = 4
     analog_f_s     = (90.0)*(10**exponent)
     analog_f_c     = (10.0)*(10**exponent)
     analog_delta_f = ( 2.5)*(10**exponent)
-    min_dB = -120
+    min_spectral_dB = -120
 
-    analog_f_bin_width = 10
+    analog_f_bin_width = 1
     AUC = 0.99
-    min_approximation_dB = -10
+    min_spectral_approximation_dB = -10
 
-    [analog_f, abs_h_f] = calculateFrequencyMagnitudeResponse(lowpass_or_highpass, analog_f_s, analog_f_c, analog_delta_f, analog_f_bin_width, AUC, min_dB)
+    [sign, analog_f, abs_h_f] = calculateFrequencyMagnitudeResponse(lowpass_or_highpass, analog_f_s, analog_f_c, analog_delta_f, analog_f_bin_width, AUC, min_spectral_dB)
 
     digital_f = analog_f/analog_f_s
     digital_f_bin_width = analog_f_bin_width/analog_f_s
@@ -162,7 +162,7 @@ if(__name__=='__main__'):
         utility.spectralEstimation.estimateUniqueSquaredSpectralChebyshevPolynomialRoots(digital_f_bin_width, 
                                                                                          digital_f, 
                                                                                          abs_h_f, 
-                                                                                         min_approximation_dB, 
+                                                                                         min_spectral_approximation_dB, 
                                                                                          withinUnitCircle, 
                                                                                          MA_or_AR,
                                                                                          10**-5)
@@ -178,7 +178,7 @@ if(__name__=='__main__'):
                                                                      root_repeating_factor, 
                                                                      squared_reduced_abs_h_f_cheb_poly_root_dicts_list)
     
-    norm_value = abs_h_f_theo[np.floor((analog_f_c - analog_delta_f)/analog_f_bin_width).astype(int)]
+    norm_value = abs_h_f_theo[np.floor((analog_f_c + sign*analog_delta_f)/analog_f_bin_width).astype(int)]
     abs_h_f_theo = abs_h_f_theo/norm_value
     MA_z_coefs = MA_z_coefs/norm_value
 
