@@ -18,8 +18,21 @@ class spectralEstimation:
 
         # Calculate the unique roots of the Chebyshev Polynomial of the reduced and squared frequency magnitude
         squared_reduced_abs_h_f = np.square(reduced_abs_h_f)
-        squared_reduced_abs_h_f_cheb_poly_roots = chebyshevSpectrumCalculations.calculateChebyshevSpectrumPolynomialRoots(f_bin_width, f, squared_reduced_abs_h_f, cutoff, N_max)
+        [squared_reduced_abs_h_f_cheb_series_coefs,
+         squared_reduced_abs_h_f_cheb_poly_roots] = \
+            chebyshevSpectrumCalculations.calculateChebyshevSpectrumPolynomialRoots(f_bin_width,
+                                                                                    f, 
+                                                                                    squared_reduced_abs_h_f, 
+                                                                                    cutoff, 
+                                                                                    N_max)
         squared_reduced_abs_h_f_cheb_poly_root_dicts_list = magnitudeDomainRoots.convertLimitedRootsArrayToRootsDictList(withinUnitCircle, MA_or_AR, squared_reduced_abs_h_f_cheb_poly_roots)
+
+        if(MA_or_AR == 'MA'):
+            MA_or_AR_str = 'moving-average'
+        elif(MA_or_AR == 'AR'):
+            MA_or_AR_str = 'auto-regressive'
+
+        print('\n' + MA_or_AR_str + ' chebyshev series coefficients: \n\n' + np.array2string(squared_reduced_abs_h_f_cheb_series_coefs) + '\n')
 
         return [abs_h_f_dB, root_repeating_factor, squared_reduced_abs_h_f_cheb_poly_root_dicts_list]
 
@@ -186,8 +199,6 @@ class chebyshevSpectrumCalculations:
         # Convert the list to an array
         cheb_series = np.array(cheb_series)
 
-        print('\nchebyshev series coefficients: \n\n' + np.array2string(cheb_series) + '\n')
-
         # Convert the approximated Chebyshev series into the corresponding Chebyshev Polynomial
         cheb_poly = np.polynomial.chebyshev.cheb2poly(cheb_series)
 
@@ -197,7 +208,7 @@ class chebyshevSpectrumCalculations:
         # Get the roots of the Chebyshev polynomial roots
         cheb_poly_roots = np.polynomial.polynomial.polyroots(cheb_poly)
 
-        return cheb_poly_roots
+        return [cheb_series, cheb_poly_roots]
 
 
 class fundamentalFrequencyResponseAndZTransformEquations:
