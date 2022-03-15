@@ -22,7 +22,7 @@ def calculateFrequencyMagnitudeResponse(lowpass_or_highpass, f_s, f_c, delta_f, 
     return [f, abs_h_f]
 
 
-def showPlots(exponent, f, abs_h_f, abs_h_f_theo, abs_h_f_emp):
+def showPlots(exponent, f, f_c, delta_f, abs_h_f, abs_h_f_theo, abs_h_f_emp):
 
     f_begin = f[0]
     f_end = f[len(f) - 1]
@@ -142,25 +142,25 @@ if(__name__=='__main__'):
     lowpass_or_highpass = 'lowpass'
 
     exponent = 4
-    f_s     = (90.0)*(10**exponent)
-    f_c     = (10.0)*(10**exponent)
-    delta_f = ( 2.5)*(10**exponent)
+    analog_f_s     = (90.0)*(10**exponent)
+    analog_f_c     = (10.0)*(10**exponent)
+    analog_delta_f = ( 2.5)*(10**exponent)
     min_dB = -120
 
-    f_bin_width = 10
+    analog_f_bin_width = 10
     AUC = 0.99
     min_approximation_dB = -10
 
-    [f, abs_h_f] = calculateFrequencyMagnitudeResponse(lowpass_or_highpass, f_s, f_c, delta_f, f_bin_width, AUC, min_dB)
+    [analog_f, abs_h_f] = calculateFrequencyMagnitudeResponse(lowpass_or_highpass, analog_f_s, analog_f_c, analog_delta_f, analog_f_bin_width, AUC, min_dB)
 
-    norm_f = f/f_s
-    norm_f_bin_width = f_bin_width/f_s
+    digital_f = analog_f/analog_f_s
+    digital_f_bin_width = analog_f_bin_width/analog_f_s
 
     [abs_h_f_dB, 
      root_repeating_factor, 
      squared_reduced_abs_h_f_cheb_poly_root_dicts_list] = \
-        utility.spectralEstimation.estimateUniqueSquaredSpectralChebyshevPolynomialRoots(norm_f_bin_width, 
-                                                                                         norm_f, 
+        utility.spectralEstimation.estimateUniqueSquaredSpectralChebyshevPolynomialRoots(digital_f_bin_width, 
+                                                                                         digital_f, 
                                                                                          abs_h_f, 
                                                                                          min_approximation_dB, 
                                                                                          withinUnitCircle, 
@@ -174,15 +174,15 @@ if(__name__=='__main__'):
 
     [abs_h_f_theo, 
      angle_deg_h_f_theo] = \
-        utility.spectralEstimation.estimateSpectralMagnitudeAndPhase(norm_f, 
+        utility.spectralEstimation.estimateSpectralMagnitudeAndPhase(digital_f, 
                                                                      root_repeating_factor, 
                                                                      squared_reduced_abs_h_f_cheb_poly_root_dicts_list)
     
-    norm_value = abs_h_f_theo[np.floor((f_c - delta_f)/f_bin_width).astype(int)]
+    norm_value = abs_h_f_theo[np.floor((analog_f_c - analog_delta_f)/analog_f_bin_width).astype(int)]
     abs_h_f_theo = abs_h_f_theo/norm_value
     MA_z_coefs = MA_z_coefs/norm_value
 
-    [_, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs, 2*np.pi*norm_f)
+    [_, h_f_emp] = dsp.freqz(MA_z_coefs, AR_z_coefs, 2*np.pi*digital_f)
     abs_h_f_emp = np.abs(h_f_emp)
 
-    showPlots(exponent, f, abs_h_f, abs_h_f_theo, abs_h_f_emp)
+    showPlots(exponent, analog_f, analog_f_c, analog_delta_f, abs_h_f, abs_h_f_theo, abs_h_f_emp)
