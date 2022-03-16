@@ -28,13 +28,15 @@ def createPlots(f_c, f, abs_h_f):
 
 if(__name__=='__main__'):
 
-    filter_type = 'lowpass';  f_c = 20
-    #filter_type = 'highpass'; f_c = 20
+    f_s = 200
+    delta_f = 7
+    AUC = 0.99
+
+    #filter_type = 'lowpass';  f_c = 20
+    filter_type = 'highpass'; f_c = 20
     #filter_type = 'bandpass'; f_c = [20, 80]
     #filter_type = 'bandstop'; f_c = [20, 80]
 
-    f_s = 200
-    delta_f = 7
     f_bin_width = 0.1
 
     ##################################################################################################################
@@ -57,11 +59,13 @@ if(__name__=='__main__'):
         if(num_f_c == 1):
 
             if(filter_type == 'lowpass'):
-                abs_h_f = special.expit(-(f - f_c))
+                sigma = delta_f/np.log((1 - AUC)/(1 + AUC))
             elif(filter_type == 'highpass'):
-                abs_h_f = special.expit(f - f_c)
+                sigma = delta_f/np.log((1 + AUC)/(1 - AUC))
             else:
                 raiseFilterTypeValueErrorFlag = True
+
+            abs_h_f = special.expit((f - f_c)/sigma)
 
         elif(num_f_c == 2):
 
