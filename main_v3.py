@@ -76,7 +76,7 @@ if(__name__=='__main__'):
         elif(num_f_c == 2):
 
             if(filter_type == 'bandpass'):
-                abs_h_f = special.expit(f - f_c[0])*special.expit(-(f - f_c[1]))
+                abs_h_f = 1 - (special.expit(-(f - f_c[0])) + special.expit(f - f_c[1]))
             elif(filter_type == 'bandstop'):
                 abs_h_f = special.expit(-(f - f_c[0])) + special.expit(f - f_c[1])
             else:
